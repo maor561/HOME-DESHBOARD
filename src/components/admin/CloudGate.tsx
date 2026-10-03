@@ -2,10 +2,13 @@ import type { Session } from '@supabase/supabase-js';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { createSeed } from '../../data/seed';
 import { useDatabase } from '../../hooks/useDatabase';
+import { navigate } from '../../hooks/useRoute';
 import { readLocalDatabase, store } from '../../services/store';
-import { SupabaseStore } from '../../services/supabaseStore';
+import type { Access, SupabaseStore } from '../../services/supabaseStore';
+import { pairCode } from '../dashboard/ViewerGate';
 
 const FIELD = 'h-12 w-full rounded-2xl border-0 bg-white/90 px-4 font-semibold text-ink placeholder:text-soft';
+const ACTION = 'h-12 rounded-2xl bg-white font-bold text-accent disabled:opacity-60';
 
 function Frame({ children }: { children: ReactNode }) {
   return (
@@ -15,11 +18,19 @@ function Frame({ children }: { children: ReactNode }) {
   );
 }
 
-/** שער הכניסה ל-Admin במצב ענן: התחברות במייל וסיסמה, והעלאה ראשונית של הנתונים כשהענן ריק. */
+/** מזהה המסך שממתין לאישור, כשהגענו לכאן מסריקת קוד ה-QR שלו. */
+const pendingDevice = () => new URLSearchParams(window.location.search).get('pair');
+
+/**
+ * שער הכניסה ל-Admin במצב ענן: התחברות במייל וסיסמה, אישור מסך שנסרק,
+ * והעלאה ראשונית של הנתונים כשהענן ריק.
+ */
 export function CloudGate({ children }: { children: (signOut: () => void) => ReactNode }) {
   const cloud = store as SupabaseStore;
   const db = useDatabase();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [access, setAccess] = useState<Access | null>(null);
+  const [device, setDevice] = useState(pendingDevice);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -31,6 +42,34 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
     return () => data.subscription.unsubscribe();
   }, [cloud]);
 
+  // משתמש אנונימי (מסך שנפתח פעם בדפדפן הזה) אינו מנהל: מציגים לו את מסך ההתחברות
+  const signedIn = session && !session.user.is_anonymous ? session : null;
+
+  useEffect(() => {
+    setAccess(null);
+    if (!signedIn) return;
+    let cancelled = false;
+    void cloud.checkAccess(signedIn).then(async (next) => {
+      if (next !== 'none') await cloud.reload().catch(() => {});
+      if (!cancelled) setAccess(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cloud, signedIn?.user.id]);
+
+  const run = async (action: () => Promise<void>, failure: string) => {
+    setBusy(true);
+    setMessage('');
+    try {
+      await action();
+    } catch (error) {
+      setMessage(`${failure}: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const signIn = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -39,29 +78,48 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
     setMessage(error ? 'המייל או הסיסמה שגויים' : '');
   };
 
-  const importData = async () => {
-    setBusy(true);
-    try {
-      await cloud.importDatabase(readLocalDatabase() ?? createSeed());
-      setMessage('');
-    } catch (error) {
-      setMessage(`ההעלאה נכשלה: ${(error as Error).message}`);
-    } finally {
-      setBusy(false);
-    }
+  const closePairing = () => {
+    setDevice(null);
+    navigate('/admin');
   };
 
-  if (session === undefined) return <Frame><p className="text-center opacity-80">טוען…</p></Frame>;
+  if (session === undefined || (signedIn && access === null)) return <Frame><p className="text-center opacity-80">טוען…</p></Frame>;
 
-  if (!session) {
+  if (!signedIn) {
     return (
       <Frame>
-        <h1 className="text-center font-serif text-[34px] font-bold">ניהול המסך</h1>
+        <h1 className="text-center font-serif text-[34px] font-bold">{device ? 'חיבור מסך' : 'ניהול המסך'}</h1>
+        {device && <p className="-mt-2 text-center opacity-85">התחברו כדי לאשר את המסך</p>}
         <form className="flex flex-col gap-3" onSubmit={signIn}>
           <input className={FIELD} type="email" autoComplete="username" placeholder="מייל" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <input className={FIELD} type="password" autoComplete="current-password" placeholder="סיסמה" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <button className="h-12 rounded-2xl bg-white font-bold text-accent disabled:opacity-60" disabled={busy}>{busy ? 'מתחבר…' : 'כניסה'}</button>
+          <button className={ACTION} disabled={busy}>{busy ? 'מתחבר…' : 'כניסה'}</button>
         </form>
+        {message && <p role="alert" className="text-center font-semibold">{message}</p>}
+      </Frame>
+    );
+  }
+
+  if (access === 'none') {
+    return (
+      <Frame>
+        <h1 className="text-center font-serif text-[30px] font-bold">אין הרשאת ניהול</h1>
+        <p className="text-center opacity-85">המשתמש הזה אינו מוגדר כמנהל של המסך.</p>
+        <button className={ACTION} onClick={() => void cloud.client.auth.signOut()}>התנתקות</button>
+      </Frame>
+    );
+  }
+
+  if (device) {
+    return (
+      <Frame>
+        <h1 className="text-center font-serif text-[30px] font-bold">לחבר את המסך הזה?</h1>
+        <p className="text-center opacity-85">ודאו שזה הקוד שמופיע על המסך:</p>
+        <p className="text-center font-serif text-[64px] font-bold leading-none tracking-[0.12em]" dir="ltr">{pairCode(device)}</p>
+        <button className={ACTION} disabled={busy} onClick={() => run(async () => { await cloud.approveDevice(device, 'מסך'); closePairing(); }, 'החיבור נכשל')}>
+          {busy ? 'מחבר…' : 'אישור וחיבור'}
+        </button>
+        <button className="h-11 font-bold underline underline-offset-4" onClick={closePairing}>ביטול</button>
         {message && <p role="alert" className="text-center font-semibold">{message}</p>}
       </Frame>
     );
@@ -75,7 +133,7 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
         <p className="text-center opacity-85">
           {hasLocal ? 'נמצאו נתונים שהוזנו במכשיר הזה. אפשר להעלות אותם לענן.' : 'אפשר להתחיל מנתוני הפתיחה ולעדכן אותם אחר כך.'}
         </p>
-        <button className="h-12 rounded-2xl bg-white font-bold text-accent disabled:opacity-60" disabled={busy} onClick={importData}>
+        <button className={ACTION} disabled={busy} onClick={() => run(() => cloud.importDatabase(readLocalDatabase() ?? createSeed()), 'ההעלאה נכשלה')}>
           {busy ? 'מעלה…' : hasLocal ? 'העלאת הנתונים מהמכשיר הזה' : 'התחלה מנתוני הפתיחה'}
         </button>
         {message && <p role="alert" className="text-center font-semibold">{message}</p>}

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { geocodeCity, updateSettings } from '../../services/mutations';
 import { store } from '../../services/store';
+import type { PairedDevice, SupabaseStore } from '../../services/supabaseStore';
 import type { DashboardStyle, WidgetKey } from '../../types';
-import { Button, Field, Panel, ScreenHeader, Select, TextInput, Toggle, toast, useDraft } from '../ui';
+import { Button, Field, IconButton, ListRow, Panel, ScreenHeader, Select, TextInput, Toggle, toast, useDraft } from '../ui';
 import { useFamily, type ScreenProps } from './shared';
 
 const WIDGET_LABEL: Record<WidgetKey, string> = {
@@ -27,6 +29,27 @@ function StylePreview({ style }: { style: DashboardStyle }) {
       <i className="absolute inset-[44px_72%_8px_8px] rotate-2 bg-[#fff3a8] shadow" />
       <i className="absolute inset-[8px_68%_46px_10px] -rotate-3 bg-white shadow" />
     </div>
+  );
+}
+
+/** המסכים שחוברו בסריקת QR. הסרת מסך מנתקת אותו, והוא יציג שוב קוד לחיבור. */
+function PairedScreens() {
+  const cloud = store as SupabaseStore;
+  const [devices, setDevices] = useState<PairedDevice[]>([]);
+  const load = () => void cloud.listDevices().then(setDevices);
+  useEffect(load, []);
+
+  return (
+    <Panel title="מסכים מחוברים">
+      {!devices.length && <p className="py-3 text-sm text-soft">עוד לא חובר מסך. פותחים את ‎/dashboard במסך, וסורקים את הקוד שמופיע בו.</p>}
+      {devices.map((device) => (
+        <ListRow key={device.userId} title={device.name} subtitle={`חובר ב-${new Date(device.createdAt).toLocaleDateString('he-IL')}`}>
+          <IconButton label="ניתוק המסך" danger onClick={async () => { await cloud.removeDevice(device.userId); toast('המסך נותק'); load(); }}>
+            <Trash2 className="size-5" />
+          </IconButton>
+        </ListRow>
+      ))}
+    </Panel>
   );
 }
 
@@ -117,6 +140,8 @@ export function SettingsScreen({ go }: ScreenProps) {
           <Button className="h-[46px] px-3.5 text-sm" disabled={pin.length !== 4} onClick={savePin}>החלפה</Button>
         </Field>
       </Panel>}
+
+      {store.mode === 'cloud' && <PairedScreens />}
 
       {store.mode === 'cloud' ? (
         <Panel title="נתונים"><div className="py-2.5"><b className="block">מסונכרן בענן</b><small className="text-sm text-soft">כל שינוי מגיע מיד לכל המכשירים.</small></div></Panel>

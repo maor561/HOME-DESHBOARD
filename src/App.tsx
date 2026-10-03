@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { ViewerGate } from './components/dashboard/ViewerGate';
 import { useDatabase } from './hooks/useDatabase';
 import { useNow } from './hooks/useNow';
 import { useRoute } from './hooks/useRoute';
@@ -20,8 +21,13 @@ export function App() {
   }, [today]);
 
   if (path.startsWith('/admin')) return <AdminPage />;
+  // בענן הצפייה מותנית בחיבור המסך (קוד QR); במצב מקומי המסך פתוח
+  return store.mode === 'cloud' ? <ViewerGate><Dashboard hasData={db.settings.length > 0} /></ViewerGate> : <DashboardPage />;
+}
+
+function Dashboard({ hasData }: { hasData: boolean }) {
   // ענן שעוד לא הועלו אליו נתונים: מפנים למסך הניהול
-  if (!db.settings.length) {
+  if (!hasData) {
     return (
       <main className="grid h-dvh place-items-center bg-[#05060c] p-8 text-center text-white">
         <div>

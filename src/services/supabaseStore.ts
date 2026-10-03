@@ -1,5 +1,14 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ID, Row, TableName } from '../types';
+
+/** מה מותר למשתמש המחובר: ניהול, צפייה כמסך מאושר, או כלום */
+export type Access = 'admin' | 'device' | 'none' | 'open';
+
+export interface PairedDevice {
+  userId: string;
+  name: string;
+  createdAt: string;
+}
 import type { DataStore } from './store';
 
 export interface CloudConfig {
@@ -55,16 +64,17 @@ export class SupabaseStore implements DataStore {
       // מטמון פגום: ממשיכים לטעינה מהענן
     }
     await this.reload().catch((error) => console.warn('טעינת הנתונים מהענן נכשלה, מוצג המטמון', error));
+    this.listen();
 
-    this.client
-      .channel('cohen-db')
-      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        const table = payload.table as TableName;
-        if (!TABLES.includes(table)) return;
-        if (payload.eventType === 'DELETE') this.apply(table, null, (payload.old as { id: ID }).id);
-        else this.apply(table, fromRow(table, payload.new as Json));
-      })
-      .subscribe();
+    // כניסה או יציאה משנות את ההרשאות: מתחברים מחדש לעדכונים וטוענים שוב
+    this.client.auth.onAuthStateChange((event) => {
+      if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
+      // setTimeout: אסור לקרוא ל-Supabase מתוך ה-callback עצמו
+      window.setTimeout(() => {
+        this.listen();
+        void this.reload().catch(() => {});
+      }, 0);
+    });
 
     // רשת ביטחון למקרה שהחיבור החי נפל: רענון מלא מדי כמה דקות וכשחוזרים ללשונית
     window.setInterval(() => void this.reload().catch(() => {}), REFRESH_MS);
@@ -103,6 +113,65 @@ export class SupabaseStore implements DataStore {
     throw new Error('איפוס זמין רק במצב מקומי');
   }
 
+  /** האזנה לשינויים בזמן אמת. נקראת מחדש כשהמשתמש מתחלף, כדי שההרשאות החדשות יחולו. */
+  private listen(): void {
+    void this.client.removeAllChannels();
+    this.client
+      .channel('cohen-db')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        const table = payload.table as TableName;
+        if (!TABLES.includes(table)) return;
+        if (payload.eventType === 'DELETE') this.apply(table, null, (payload.old as { id: ID }).id);
+        else this.apply(table, fromRow(table, payload.new as Json));
+      })
+      .subscribe();
+  }
+
+  /* ---------- הרשאות צפייה וחיבור מסכים ---------- */
+
+  /** מסך שעוד אין לו זהות מקבל משתמש אנונימי, שאותו מאשרים מהטלפון. */
+  async ensureSession(): Promise<Session> {
+    const existing = await this.getSession();
+    if (existing) return existing;
+    const { data, error } = await this.client.auth.signInAnonymously();
+    if (error || !data.session) throw new Error(error?.message ?? 'anonymous sign-in failed');
+    return data.session;
+  }
+
+  /**
+   * בודק מה מותר למשתמש הנוכחי. 'open' מוחזר כשטבלאות ההרשאות עוד לא הותקנו
+   * במסד הנתונים, ואז המערכת מתנהגת כמו קודם (צפייה פתוחה).
+   */
+  async checkAccess(session: Session | null): Promise<Access> {
+    const probe = await this.client.from('devices').select('user_id').limit(1);
+    if (probe.error && /does not exist|not find|schema cache/i.test(probe.error.message)) return 'open';
+    if (!session) return 'none';
+    const uid = session.user.id;
+    if (!session.user.is_anonymous) {
+      const { data } = await this.client.from('admins').select('user_id').eq('user_id', uid).maybeSingle();
+      return data ? 'admin' : 'none';
+    }
+    const { data } = await this.client.from('devices').select('user_id').eq('user_id', uid).maybeSingle();
+    return data ? 'device' : 'none';
+  }
+
+  async approveDevice(deviceUserId: string, name: string): Promise<void> {
+    const session = await this.getSession();
+    const { error } = await this.client.from('devices').upsert({ user_id: deviceUserId, name, approved_by: session?.user.id });
+    if (error) throw new Error(error.message);
+  }
+
+  async listDevices(): Promise<PairedDevice[]> {
+    const { data, error } = await this.client.from('devices').select('user_id, name, created_at').order('created_at');
+    if (error) return [];
+    return (data as { user_id: string; name: string; created_at: string }[]).map((d) => ({ userId: d.user_id, name: d.name, createdAt: d.created_at }));
+  }
+
+  async removeDevice(deviceUserId: string): Promise<void> {
+    const { error } = await this.client.from('devices').delete().eq('user_id', deviceUserId);
+    if (error) throw new Error(error.message);
+  }
+
   /** העלאה ראשונית של נתונים קיימים (למשל מהמצב המקומי) לענן ריק. דורש משתמש מחובר. */
   async importDatabase(source: Database): Promise<void> {
     for (const table of TABLES) {
@@ -117,7 +186,7 @@ export class SupabaseStore implements DataStore {
 
   getSession = async (): Promise<Session | null> => (await this.client.auth.getSession()).data.session;
 
-  private async reload(): Promise<void> {
+  async reload(): Promise<void> {
     const results = await Promise.all(TABLES.map((table) => this.client.from(table).select('*')));
     const next = { ...EMPTY } as Record<TableName, unknown[]>;
     results.forEach(({ data, error }, i) => {
