@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Assistant', system-ui, sans-serif;
+  --font-serif: 'Frank Ruhl Libre', serif;
+  --color-paper: #f6f0e6;
+  --color-card: #fffdf9;
+  --color-ink: #1f2a3d;
+  --color-soft: #6d7686;
+  --color-faint: #a9afb9;
+  --color-line: #e8dfd0;
+  --color-accent: #c2501c;
+  --color-accent-soft: #fbe6d8;
+  --color-ok: #2f9e7a;
+  --color-danger: #c93c3c;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+.dashboard-root {
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: #05060c;
+  overflow: hidden;
+  cursor: none;
+}
+
+/* רקע "שמי שקיעה" של מסך הנעילה וכרטיס הבית ב-Admin */
+.admin-sky {
+  background: linear-gradient(160deg, #2a2552 0%, #b54a72 55%, #f59e56 100%);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.sheet-up {
+  animation: sheet-up 0.25s ease;
+}

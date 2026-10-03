@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>משפחת כהן · סקיצת Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @property --s1 { syntax: '<color>'; inherits: true; initial-value: #050818; }
+  @property --s2 { syntax: '<color>'; inherits: true; initial-value: #0f1736; }
+  @property --s3 { syntax: '<color>'; inherits: true; initial-value: #1b2650; }
+
+  :root {
+    --bar: 56px;
+    /* יחידת קנה מידה: 1u = 1% מרוחב מסך 16:9 */
+    --u: min(1vw, calc((100vh - var(--bar)) / 56.25));
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #05060c; overflow: hidden; }
+  body { font-family: 'Assistant', system-ui, sans-serif; }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    position: relative; overflow: hidden;
+    width: calc(var(--u) * 100); height: calc(var(--u) * 56.25);
+    margin: 0 auto; font-size: calc(var(--u) * 1.3);
+    color: var(--ink);
+    transition: --s1 1.6s ease, --s2 1.6s ease, --s3 1.6s ease, color 1.2s ease;
+  }
+  .stage[data-scheme="dark"] {
+    --ink: #fdf8ef; --soft: rgba(253,248,239,.72); --faint: rgba(253,248,239,.4);
+    --glass: rgba(10,16,36,.40); --glass-hi: rgba(255,255,255,.13); --line: rgba(255,255,255,.16);
+    --accent: #ffbd66;
+  }
+  .stage[data-scheme="light"] {
+    --ink: #12233d; --soft: rgba(18,35,61,.72); --faint: rgba(18,35,61,.38);
+    --glass: rgba(255,255,255,.46); --glass-hi: rgba(255,255,255,.82); --line: rgba(255,255,255,.75);
+    --accent: #c2501c;
+  }
+  .serif { font-family: 'Frank Ruhl Libre', serif; }
+
+  /* ---------- שמיים ואפקטים ---------- */
+  .layer { position: absolute; inset: 0; pointer-events: none; }
+  .sky { background: linear-gradient(180deg, var(--s1) 0%, var(--s2) 52%, var(--s3) 100%); }
+  .glow { transition: opacity 1.6s ease, background 1.6s ease; }
+  .veil { transition: background 1.6s ease; }
+
+  .stars { opacity: 0; transition: opacity 2s ease;
+    background-image:
+      radial-gradient(circle at 12% 18%, #fff 0 .09em, transparent .11em),
+      radial-gradient(circle at 31% 9%, #fff 0 .06em, transparent .08em),
+      radial-gradient(circle at 47% 26%, #fff 0 .07em, transparent .09em),
+      radial-gradient(circle at 63% 12%, #fff 0 .1em, transparent .12em),
+      radial-gradient(circle at 78% 31%, #fff 0 .06em, transparent .08em),
+      radial-gradient(circle at 90% 8%, #fff 0 .08em, transparent .1em),
+      radial-gradient(circle at 22% 41%, #fff 0 .05em, transparent .07em),
+      radial-gradient(circle at 56% 44%, #fff 0 .05em, transparent .07em),
+      radial-gradient(circle at 84% 52%, #fff 0 .06em, transparent .08em),
+      radial-gradient(circle at 6% 58%, #fff 0 .05em, transparent .07em);
+    animation: twinkle 5s ease-in-out infinite alternate; }
+  .stage[data-phase="night"][data-weather="clear"] .stars { opacity: .85; }
+  @keyframes twinkle { from { filter: brightness(.7); } to { filter: brightness(1.3); } }
+
+  .clouds i { position: absolute; border-radius: 50%; background: #fff; filter: blur(calc(var(--u) * 3)); opacity: 0; transition: opacity 1.6s ease; }
+  .clouds i:nth-child(1) { width: 46%; height: 22%; top: -6%; right: -8%; animation: drift 70s linear infinite alternate; }
+  .clouds i:nth-child(2) { width: 38%; height: 18%; top: 4%; right: 38%; animation: drift 95s linear infinite alternate-reverse; }
+  .clouds i:nth-child(3) { width: 42%; height: 20%; top: -4%; right: 72%; animation: drift 80s linear infinite alternate; }
+  .stage[data-weather="clouds"] .clouds i { opacity: .5; }
+  .stage[data-weather="rain"] .clouds i { opacity: .16; }
+  .stage[data-weather="snow"] .clouds i { opacity: .4; }
+  .stage[data-phase="night"] .clouds i, .stage[data-phase="sunset"] .clouds i, .stage[data-phase="dawn"] .clouds i { filter: blur(calc(var(--u) * 3)) brightness(.6); }
+  @keyframes drift { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+
+  .fog i { position: absolute; right: -20%; width: 140%; height: 26%; border-radius: 50%; background: #eef1f4; filter: blur(calc(var(--u) * 4)); opacity: 0; transition: opacity 1.6s ease; }
+  .fog i:nth-child(1) { top: 8%; animation: drift 40s ease-in-out infinite alternate; }
+  .fog i:nth-child(2) { top: 40%; animation: drift 55s ease-in-out infinite alternate-reverse; }
+  .fog i:nth-child(3) { top: 72%; animation: drift 47s ease-in-out infinite alternate; }
+  .stage[data-weather="fog"] .fog i { opacity: .42; }
+  .stage[data-weather="fog"]:not([data-phase="day"]) .fog i { opacity: .2; }
+
+  .fx i { position: absolute; top: -10%; }
+  .fx i.drop { width: calc(var(--u) * .09); height: calc(var(--u) * 4.5); border-radius: 1em;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,.55)); transform: rotate(10deg);
+    animation: fall linear infinite; }
+  .fx i.flake { border-radius: 50%; background: #fff; box-shadow: 0 0 .5em rgba(255,255,255,.8);
+    animation: snow linear infinite; }
+  @keyframes fall { to { transform: translate(calc(var(--u) * -9), calc(var(--u) * 70)) rotate(10deg); } }
+  @keyframes snow {
+    25% { transform: translate(calc(var(--u) * 1.5), calc(var(--u) * 17)); }
+    50% { transform: translate(calc(var(--u) * -1), calc(var(--u) * 34)); }
+    75% { transform: translate(calc(var(--u) * 1.2), calc(var(--u) * 51)); }
+    100% { transform: translate(0, calc(var(--u) * 68)); } }
+
+  /* ---------- תמונות ---------- */
+  .photo { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(135deg, #6b4a3a, #c98a5a 55%, #f1c98f); }
+  .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 2.2s ease; animation: kenburns 24s ease-in-out infinite alternate; }
+  .photo img.on { opacity: 1; }
+  @keyframes kenburns { from { transform: scale(1.02); } to { transform: scale(1.1) translate(-1.2%, -1%); } }
+
+  /* ---------- רכיבים משותפים ---------- */
+  .card { background: var(--glass); border: 1px solid var(--line); border-radius: calc(var(--u) * 1.5);
+    backdrop-filter: blur(calc(var(--u) * 1.4)) saturate(1.25); -webkit-backdrop-filter: blur(calc(var(--u) * 1.4)) saturate(1.25);
+    padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); box-shadow: 0 calc(var(--u) * .8) calc(var(--u) * 2.4) rgba(0,0,0,.14);
+    display: flex; flex-direction: column; min-height: 0; transition: background 1.2s ease, border-color 1.2s ease; }
+  .label { font-size: .82em; font-weight: 700; letter-spacing: .14em; color: var(--soft); margin-bottom: .9em; display: flex; align-items: center; gap: .5em; }
+  .label::before { content: ''; width: .55em; height: .55em; border-radius: 50%; background: var(--accent); }
+  svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .fam { font-size: 1.15em; font-weight: 600; letter-spacing: .32em; color: var(--soft); }
+  .clock { font-family: 'Frank Ruhl Libre', serif; font-weight: 500; line-height: .86; letter-spacing: -.02em; direction: ltr; font-variant-numeric: tabular-nums; }
+  .clock .colon { animation: blink 2s steps(1) infinite; position: relative; top: -.06em; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .date { font-size: 1.85em; font-weight: 500; }
+
+  .wx-now { display: flex; align-items: center; gap: .9em; }
+  .wx-now > .ic { font-size: 4.4em; stroke-width: 1.3; color: var(--accent); }
+  .wx-temp { font-family: 'Frank Ruhl Libre', serif; font-size: 4.6em; line-height: 1; direction: ltr; }
+  .wx-meta { font-size: 1.02em; color: var(--soft); line-height: 1.5; }
+  .wx-meta b { color: var(--ink); font-weight: 600; font-size: 1.15em; display: block; }
+  .wx-meta span { display: inline-flex; align-items: center; gap: .3em; margin-inline-end: .9em; }
+  .fc { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5em; text-align: center; }
+  .fc div { padding: .55em 0; border-radius: .9em; background: var(--glass-hi); }
+  .fc small { display: block; font-size: .9em; color: var(--soft); }
+  .fc .ic { font-size: 1.5em; margin: .2em 0 .1em; }
+  .fc b { font-family: 'Frank Ruhl Libre', serif; font-size: 1.45em; font-weight: 500; }
+
+  .row { display: flex; align-items: center; gap: .8em; padding: .5em 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .t { font-family: 'Frank Ruhl Libre', serif; font-size: 1.35em; min-width: 3.1em; direction: ltr; text-align: right; }
+  .row .main { flex: 1; min-width: 0; }
+  .row .main b { display: block; font-size: 1.22em; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .main small { display: block; font-size: .95em; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { width: 2.3em; height: 2.3em; border-radius: 50%; display: grid; place-items: center; font-size: 1.1em; flex: none; background: var(--c, var(--glass-hi)); color: #fff; font-weight: 700; }
+  .row.past { opacity: .42; }
+  .row.next { background: var(--glass-hi); border-radius: 1em; padding-inline: .8em; margin-inline: -.8em; border-top-color: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .row.next + .row { border-top-color: transparent; }
+  .nowline { display: flex; align-items: center; gap: .6em; color: var(--accent); font-weight: 700; font-size: .92em; margin: .25em 0; }
+  .nowline::after { content: ''; flex: 1; height: 2px; background: linear-gradient(90deg, transparent, var(--accent)); }
+
+  .task { display: flex; align-items: center; gap: .7em; padding: .42em 0; }
+  .task .box { width: 1.5em; height: 1.5em; border-radius: .45em; border: 2px solid var(--soft); display: grid; place-items: center; flex: none; }
+  .task .box .ic { font-size: 1em; stroke-width: 3; opacity: 0; }
+  .task.done .box { background: var(--accent); border-color: var(--accent); color: #1a1208; }
+  .task.done .box .ic { opacity: 1; }
+  .task b { flex: 1; font-size: 1.18em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task.done b { text-decoration: line-through; color: var(--faint); font-weight: 500; }
+  .task small { font-size: .88em; color: var(--soft); white-space: nowrap; }
+  .task .hi { width: .55em; height: .55em; border-radius: 50%; background: #ff6b5e; flex: none; }
+  .who { font-size: .82em; padding: .12em .7em; border-radius: 1em; background: var(--c); color: #fff; font-weight: 700; }
+
+  .bd { display: flex; align-items: center; gap: .8em; padding: .45em 0; }
+  .bd + .bd { border-top: 1px solid var(--line); }
+  .bd .main { flex: 1; min-width: 0; }
+  .bd .main b { display: block; font-size: 1.2em; line-height: 1.2; }
+  .bd .main small { display: block; font-size: .95em; color: var(--soft); }
+  .bd .in { text-align: center; line-height: 1; min-width: 3em; }
+  .bd .in b { font-family: 'Frank Ruhl Libre', serif; font-size: 2em; font-weight: 500; color: var(--accent); display: block; }
+  .bd .in small { font-size: .78em; color: var(--soft); }
+
+  .quote { font-family: 'Frank Ruhl Libre', serif; font-size: 1.75em; line-height: 1.3; }
+  .quote small { display: block; font-family: 'Assistant', sans-serif; font-size: .46em; font-weight: 700; letter-spacing: .16em; color: var(--soft); margin-bottom: .5em; }
+
+  /* ---------- כיוון א': התמונה היא המסך ---------- */
+  .A, .B { position: absolute; inset: 0; display: none; }
+  .stage[data-layout="A"] .A, .stage[data-layout="B"] .B { display: block; }
+  .A .tint { background:
+      linear-gradient(180deg, color-mix(in srgb, var(--s1) 82%, transparent) 0%, color-mix(in srgb, var(--s2) 30%, transparent) 34%, transparent 52%, rgba(4,7,18,.5) 70%, rgba(4,7,18,.86) 100%); }
+  .A .ui { position: absolute; inset: 0; padding: calc(var(--u) * 2.8) calc(var(--u) * 3.2); display: flex; flex-direction: column; }
+  .A .top { display: flex; justify-content: space-between; align-items: flex-start; text-shadow: 0 .1em 1.2em rgba(0,0,0,.45); }
+  .A .clock { font-size: 10em; margin: .06em 0 .1em; }
+  .A .wx { width: calc(var(--u) * 30); }
+  .A .wx .fc { margin-top: 1em; }
+  .A .wx .fc div { background: rgba(10,16,36,.34); backdrop-filter: blur(calc(var(--u) * 1)); }
+  .A .mid { flex: 1; display: flex; align-items: flex-end; padding-bottom: 1.4em; text-shadow: 0 .1em 1em rgba(0,0,0,.6); }
+  .A .mid .quote { max-width: 24em; }
+  .A .cards .card { min-width: 0; overflow: hidden; }
+  .A .cards .bd { padding: .28em 0; }
+  .A .cards { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,1.2fr) minmax(0,1fr); gap: calc(var(--u) * 1.3); height: calc(var(--u) * 19.5); }
+
+  /* ---------- כיוון ב': השמיים הם המסך ---------- */
+  .B .ui { position: absolute; inset: 0; padding: calc(var(--u) * 2.6) calc(var(--u) * 3); display: grid;
+    grid-template-columns: calc(var(--u) * 33) 1fr calc(var(--u) * 24.5); gap: calc(var(--u) * 2.2); }
+  .B .col { display: flex; flex-direction: column; gap: calc(var(--u) * 1.5); min-height: 0; min-width: 0; }
+  .B .clock { font-size: 10.6em; margin: .07em 0 .09em; }
+  .B .arc { margin: .6em 0 .2em; }
+  .B .arc svg { width: 100%; display: block; overflow: visible; }
+  .B .arc .ends { display: flex; justify-content: space-between; font-size: 1.02em; color: var(--soft); margin-top: -.3em; }
+  .B .arc .ends b { font-family: 'Frank Ruhl Libre', serif; font-size: 1.4em; font-weight: 500; color: var(--ink); margin-inline-start: .3em; }
+  .B .wxcard { gap: .9em; flex: none; padding-block: calc(var(--u) * 1.2); }
+  .B .fc div { display: flex; flex-direction: column; align-items: center; padding: .4em 0; }
+  .B .fc br { display: none; }
+    .B .day { flex: 1; }
+  .B .frame { flex: 1; position: relative; border-radius: calc(var(--u) * 2); overflow: hidden; border: calc(var(--u) * .35) solid var(--glass-hi);
+    box-shadow: 0 calc(var(--u) * 1.4) calc(var(--u) * 4) rgba(0,0,0,.3); }
+  .B .frame .cap { position: absolute; inset: auto 0 0 0; padding: 5em 1.3em 1.2em; color: #fff;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.72)); }
+  .B .frame .quote { font-size: 1.5em; }
+  .B .frame .quote small { color: rgba(255,255,255,.75); }
+
+  /* ---------- מצב לילה מעומעם ---------- */
+  .dim { background: #000; display: grid; place-items: center; opacity: 0; transition: opacity 1.4s ease; z-index: 20; text-align: center; }
+  .stage[data-dim="1"] .dim { opacity: 1; }
+  .dim .clock { font-size: calc(var(--u) * 19); color: #4a2f17; }
+  .dim p { font-size: calc(var(--u) * 1.8); color: #33210f; margin-top: .6em; }
+
+  /* ---------- פקדי הסקיצה (לא חלק מהמסך) ---------- */
+  .bar { height: var(--bar); display: flex; align-items: center; justify-content: center; gap: 18px; padding: 0 16px;
+    background: #101320; color: #c9cede; font: 600 13px 'Assistant', sans-serif; border-top: 1px solid #262b40; overflow-x: auto; white-space: nowrap; }
+  .bar .grp { display: flex; align-items: center; gap: 5px; }
+  .bar .grp > span { color: #7d85a3; margin-inline-end: 3px; }
+  .bar button { font: inherit; color: #c9cede; background: #1b2033; border: 1px solid #2c3350; border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  .bar button:hover { background: #252b45; }
+  .bar button[aria-pressed="true"] { background: #ffbd66; border-color: #ffbd66; color: #1a1208; }
+  .bar button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage" data-layout="B" data-scheme="dark" data-phase="night" data-weather="clear" data-dim="0">
+
+  <!-- ===== כיוון ב': שמיים ===== -->
+  <div class="B">
+    <div class="layer sky"></div>
+    <div class="layer glow"></div>
+    <div class="layer stars"></div>
+    <div class="layer clouds"><i></i><i></i><i></i></div>
+    <div class="layer veil"></div>
+    <div class="layer fog"><i></i><i></i><i></i></div>
+    <div class="layer fx"></div>
+    <div class="ui">
+      <div class="col hero">
+        <div>
+          <div class="fam" data-slot="fam"></div>
+          <div class="clock" data-slot="clock"></div>
+          <div class="date" data-slot="date"></div>
+        </div>
+        <div class="arc" data-slot="arc"></div>
+        <div class="card wxcard" data-slot="wx"></div>
+        </div>
+      <div class="col">
+        <div class="card day"><div class="label">היום שלנו</div><div data-slot="timeline"></div></div>
+        <div class="card tasks"><div class="label">משימות</div><div class="grid" data-slot="tasks"></div></div>
+      </div>
+      <div class="col">
+        <div class="frame"><div class="photo" data-slot="photo"></div><div class="cap"><div class="quote" data-slot="quote"></div></div></div>
+        <div class="card"><div class="label">ימי הולדת קרובים</div><div data-slot="bdays"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== כיוון א': תמונה מלאה ===== -->
+  <div class="A">
+    <div class="photo" data-slot="photo"></div>
+    <div class="layer tint"></div>
+    <div class="layer clouds"><i></i><i></i><i></i></div>
+    <div class="layer fog"><i></i><i></i><i></i></div>
+    <div class="layer fx"></div>
+    <div class="ui">
+      <div class="top">
+        <div>
+          <div class="fam" data-slot="fam"></div>
+          <div class="clock" data-slot="clock"></div>
+          <div class="date" data-slot="date"></div>
+        </div>
+        <div class="wx" data-slot="wx"></div>
+      </div>
+      <div class="mid"><div class="quote" data-slot="quote"></div></div>
+      <div class="cards">
+        <div class="card"><div class="label">חוגים היום</div><div data-slot="acts"></div></div>
+        <div class="card"><div class="label">ארוחות היום</div><div data-slot="meals"></div></div>
+        <div class="card"><div class="label">משימות</div><div data-slot="tasks"></div></div>
+        <div class="card"><div class="label">ימי הולדת קרובים</div><div data-slot="bdays"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer dim"><div><div class="clock">02:14</div><p>לילה טוב, משפחת כהן</p></div></div>
+</div>
+
+<div class="bar" role="toolbar" aria-label="פקדי הסקיצה">
+  <div class="grp" data-group="layout"><span>כיוון</span>
+    <button data-v="B">ב׳ · השמיים הם המסך</button><button data-v="A">א׳ · התמונה היא המסך</button></div>
+  <div class="grp" data-group="time"><span>שעה</span>
+    <button data-v="live">עכשיו</button><button data-v="401">זריחה</button><button data-v="740">צהריים</button>
+    <button data-v="1066">אחר הצהריים</button><button data-v="1099">שקיעה</button><button data-v="1265">ערב</button><button data-v="dim">לילה מעומעם</button></div>
+  <div class="grp" data-group="weather"><span>מזג אוויר</span>
+    <button data-v="clear">בהיר</button><button data-v="clouds">מעונן</button><button data-v="rain">גשם</button><button data-v="fog">ערפל</button><button data-v="snow">שלג</button></div>
+</div>
+
+<script>
+const ICONS = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  clouds: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  rain: '<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M16 14v6M8 14v6M12 16v6"/>',
+  fog: '<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M16 17H7M17 21H9"/>',
+  snow: '<path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/>',
+  wind: '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+  drop: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+
+// נתוני דוגמה בלבד (יוחלפו בשמות האמיתיים)
+const SUNRISE = 397, SUNSET = 1104; // 06:37, 18:24
+const WX = {
+  clear: { text: 'בהיר', temp: 26, feels: 27 }, clouds: { text: 'מעונן חלקית', temp: 23, feels: 23 },
+  rain: { text: 'גשם', temp: 15, feels: 13 }, fog: { text: 'ערפל', temp: 14, feels: 13 }, snow: { text: 'שלג', temp: 0, feels: -3 },
+};
+const MEMBERS = { noa: { name: 'נועה', c: '#e2607a' }, michael: { name: 'מיכאל', c: '#3f8fdc' }, mom: { name: 'אמא', c: '#8a63d2' }, dad: { name: 'אבא', c: '#2f9e7a' } };
+const DAY = [
+  { at: 450, kind: 'meal', icon: '☕', title: 'ארוחת בוקר', sub: 'חביתה, ירקות, גבינה ולחם' },
+  { at: 810, kind: 'meal', icon: '🍝', title: 'ארוחת צהריים', sub: 'שניצל, אורז וסלט' },
+  { at: 960, end: 1020, kind: 'act', icon: '🥋', who: 'noa', title: 'ג׳ודו', sub: 'אולם הספורט' },
+  { at: 1020, end: 1110, kind: 'act', icon: '⚽', who: 'michael', title: 'כדורגל', sub: 'המגרש העירוני' },
+  { at: 1140, kind: 'meal', icon: '🌙', title: 'ארוחת ערב', sub: 'פסטה וסלט' },
+];
+const TASKS = [
+  { t: 'לקנות חלב', done: true, who: 'dad', due: 'היום' },
+  { t: 'להכין תיקים לבית הספר', who: 'noa', due: 'היום', hi: true },
+  { t: 'לשלם חשבון חשמל', who: 'mom', due: 'מחר' },
+  { t: 'להזמין ניקיון', due: 'יום ג׳' },
+];
+const BDAYS = [
+  { who: 'noa', name: 'נועה', date: '8 באוקטובר', age: 9, days: 5 },
+  { who: 'michael', name: 'מיכאל', date: '14 באוקטובר', age: 12, days: 11 },
+  { name: 'סבתא רותי', date: '2 בנובמבר', days: 30, c: '#c98a3a' },
+];
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const FORECAST = [['clear', 27], ['clear', 25], ['clouds', 24], ['rain', 21], ['clouds', 23]];
+const PHOTOS = ['cohen-a', 'cohen-b', 'cohen-c', 'cohen-d'].map(s => `https://picsum.photos/seed/${s}/1400/1000`);
+
+const stage = document.getElementById('stage');
+const state = { layout: 'B', time: 'live', weather: 'clear' };
+const hhmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const fill = (slot, html) => document.querySelectorAll(`[data-slot="${slot}"]`).forEach(el => el.innerHTML = html);
+
+function nowMin() {
+  if (state.time === 'live' || state.time === 'dim') { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+  return +state.time;
+}
+function phaseOf(m) {
+  if (m >= SUNRISE - 40 && m < SUNRISE + 55) return 'dawn';
+  if (m >= SUNSET - 55 && m < SUNSET + 35) return 'sunset';
+  return m > SUNRISE && m < SUNSET ? 'day' : 'night';
+}
+function skyOf(phase, w) {
+  const base = {
+    dawn:   { c: ['#1f2b55', '#8a5a83', '#f0a877'], scheme: 'dark',  glow: 'radial-gradient(60% 55% at 85% 100%, rgba(255,196,128,.75), transparent 70%)' },
+    day:    { c: ['#4f9fe6', '#9bcdf4', '#e9f6fd'], scheme: 'light', glow: 'radial-gradient(45% 50% at 50% -5%, rgba(255,250,220,.9), transparent 70%)' },
+    sunset: { c: ['#2a2552', '#b54a72', '#f59e56'], scheme: 'dark',  glow: 'radial-gradient(60% 55% at 12% 100%, rgba(255,170,90,.8), transparent 70%)' },
+    night:  { c: ['#050818', '#0f1736', '#1b2650'], scheme: 'dark',  glow: 'radial-gradient(40% 45% at 20% 0%, rgba(150,170,255,.22), transparent 70%)' },
+  }[phase];
+  const sky = { ...base, veil: 'transparent' };
+  if (phase === 'day') {
+    if (w === 'clouds') sky.c = ['#7fa9cf', '#b6d0e5', '#e8eff5'];
+    if (w === 'rain') { sky.c = ['#35435a', '#56687f', '#8494a5']; sky.scheme = 'dark'; sky.glow = 'none'; }
+    if (w === 'fog') { sky.c = ['#a9b3bc', '#c9d0d6', '#e8ebee']; sky.glow = 'none'; }
+    if (w === 'snow') { sky.c = ['#9db3c9', '#cfdbe6', '#f5f8fb']; sky.glow = 'none'; }
+  } else {
+    if (w === 'rain') sky.veil = 'rgba(14,20,34,.5)';
+    if (w === 'fog') sky.veil = 'rgba(190,196,208,.2)';
+    if (w === 'snow') sky.veil = 'rgba(210,222,240,.14)';
+    if (w === 'clouds') sky.veil = 'rgba(40,46,66,.22)';
+  }
+  return sky;
+}
+
+function renderWx(night) {
+  const w = WX[state.weather];
+  const icon = state.weather === 'clear' ? (night ? 'moon' : 'sun') : state.weather;
+  const today = new Date().getDay();
+  return `<div class="wx-now">${ic(icon)}<div class="wx-temp">${w.temp}°</div>
+      <div class="wx-meta"><b>${w.text} · יקנעם עילית</b>מרגיש כמו ${w.feels}°<br><span>${ic('drop')}48%</span><span>${ic('wind')}12 קמ״ש</span></div></div>
+    <div class="fc">${FORECAST.map(([k, t], i) => `<div><small>${DAYS[(today + i + 1) % 7]}</small>${ic(k === 'clear' ? 'sun' : k)}<br><b>${t}°</b></div>`).join('')}</div>`;
+}
+function renderArc(m) {
+  const day = m > SUNRISE && m < SUNSET;
+  const t = day ? (m - SUNRISE) / (SUNSET - SUNRISE) : .5;
+  // בזייה ריבועית מימין (זריחה) לשמאל (שקיעה)
+  const x = (1 - t) ** 2 * 290 + 2 * (1 - t) * t * 150 + t ** 2 * 10;
+  const y = (1 - t) ** 2 * 46 + 2 * (1 - t) * t * -38 + t ** 2 * 46;
+  const body = day
+    ? `<circle cx="${x}" cy="${y}" r="15" fill="var(--accent)" opacity=".22"/><circle cx="${x}" cy="${y}" r="7.5" fill="var(--accent)"/>`
+    : `<g transform="translate(${x - 9} ${y - 9}) scale(.75)" fill="var(--ink)" opacity=".85"><path d="${ICONS.moon.match(/d="([^"]+)"/)[1]}"/></g>`;
+  return `<svg viewBox="0 -4 300 56" aria-hidden="true">
+      <path d="M290 46 Q150 -38 10 46" fill="none" stroke="var(--faint)" stroke-width="1.2" stroke-dasharray="2 5" stroke-linecap="round"/>
+      <line x1="0" y1="46" x2="300" y2="46" stroke="var(--line)" stroke-width="1"/>${body}</svg>
+    <div class="ends"><span>זריחה<b>${hhmm(SUNRISE)}</b></span><span>שקיעה<b>${hhmm(SUNSET)}</b></span></div>`;
+}
+function rowHtml(e, m, nextAt) {
+  const cls = (e.end ?? e.at + 45) <= m ? 'past' : e.at === nextAt ? 'next' : '';
+  const who = e.who ? MEMBERS[e.who] : null;
+  const time = e.end ? `${hhmm(e.at)}` : hhmm(e.at);
+  const title = who ? `${who.name} · ${e.title}` : e.title;
+  const sub = e.end ? `עד ${hhmm(e.end)} · ${e.sub}` : e.sub;
+  return `<div class="row ${cls}"><span class="t">${time}</span><span class="badge" style="--c:${who ? who.c : 'var(--glass-hi)'}">${e.icon}</span>
+    <span class="main"><b>${title}</b><small>${sub}</small></span></div>`;
+}
+function renderDay(m, filter) {
+  const list = DAY.filter(e => !filter || e.kind === filter);
+  const next = DAY.find(e => (e.end ?? e.at + 45) > m);
+  let out = '', marked = false;
+  for (const e of list) {
+    if (!filter && !marked && e.at > m) { out += `<div class="nowline">עכשיו ${hhmm(m)}</div>`; marked = true; }
+    out += rowHtml(e, m, next?.at);
+  }
+  return out;
+}
+const renderTasks = () => TASKS.map(t => `<div class="task ${t.done ? 'done' : ''}"><span class="box">${ic('check')}</span><b>${t.t}</b>
+    ${t.hi && !t.done ? '<i class="hi" title="עדיפות גבוהה"></i>' : ''}${t.who ? `<span class="who" style="--c:${MEMBERS[t.who].c}">${MEMBERS[t.who].name}</span>` : ''}<small>${t.due}</small></div>`).join('');
+const renderBdays = () => BDAYS.map(b => `<div class="bd"><span class="badge" style="--c:${b.who ? MEMBERS[b.who].c : b.c}">${b.name[0]}</span>
+    <span class="main"><b>${b.name}</b><small>${b.date}${b.age ? ` · בת/בן ${b.age}` : ''}</small></span>
+    <span class="in"><b>${b.days}</b><small>ימים</small></span></div>`).join('');
+
+function particles() {
+  document.querySelectorAll('.fx').forEach(fx => {
+    let html = '';
+    if (state.weather === 'rain') for (let i = 0; i < 70; i++)
+      html += `<i class="drop" style="right:${Math.random() * 115 - 5}%;animation-duration:${(.55 + Math.random() * .5).toFixed(2)}s;animation-delay:-${Math.random().toFixed(2)}s;opacity:${(.3 + Math.random() * .6).toFixed(2)}"></i>`;
+    if (state.weather === 'snow') for (let i = 0; i < 60; i++) {
+      const s = (.25 + Math.random() * .5).toFixed(2);
+      html += `<i class="flake" style="right:${Math.random() * 100}%;width:calc(var(--u)*${s});height:calc(var(--u)*${s});animation-duration:${(8 + Math.random() * 9).toFixed(1)}s;animation-delay:-${(Math.random() * 14).toFixed(1)}s;opacity:${(.5 + Math.random() * .5).toFixed(2)}"></i>`;
+    }
+    fx.innerHTML = html;
+  });
+}
+
+function render() {
+  const m = nowMin(), phase = phaseOf(m), sky = skyOf(phase, state.weather);
+  stage.dataset.layout = state.layout;
+  stage.dataset.phase = phase;
+  stage.dataset.weather = state.weather;
+  stage.dataset.dim = state.time === 'dim' ? 1 : 0;
+  stage.dataset.scheme = state.layout === 'A' ? 'dark' : sky.scheme;
+  ['--s1', '--s2', '--s3'].forEach((v, i) => stage.style.setProperty(v, sky.c[i]));
+  document.querySelector('.B .glow').style.background = sky.glow;
+  document.querySelector('.B .veil').style.background = sky.veil;
+
+  fill('fam', 'משפחת כהן');
+  fill('clock', hhmm(m).replace(':', '<span class="colon">:</span>'));
+  fill('date', new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()));
+  fill('wx', renderWx(phase === 'night'));
+  fill('arc', renderArc(m));
+  fill('timeline', renderDay(m));
+  fill('acts', renderDay(m, 'act'));
+  fill('meals', renderDay(m, 'meal'));
+  fill('tasks', renderTasks());
+  fill('bdays', renderBdays());
+  fill('quote', '<small>משפט היום</small>״הדברים הגדולים מתחילים בצעדים קטנים.״');
+
+  document.querySelectorAll('.bar .grp').forEach(g =>
+    g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(state[g.dataset.group])))));
+}
+
+// תמונות מתחלפות
+document.querySelectorAll('[data-slot="photo"]').forEach(box => {
+  box.innerHTML = PHOTOS.map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}">`).join('');
+});
+let photoIdx = 0;
+setInterval(() => {
+  photoIdx = (photoIdx + 1) % PHOTOS.length;
+  document.querySelectorAll('[data-slot="photo"]').forEach(box => [...box.children].forEach((img, i) => img.classList.toggle('on', i === photoIdx)));
+}, 7000);
+
+document.querySelector('.bar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const group = b.parentElement.dataset.group;
+  state[group] = b.dataset.v;
+  if (group === 'weather') particles();
+  render();
+});
+setInterval(() => { if (state.time === 'live') render(); }, 15000);
+render();
+</script>
+</body>
+</html>

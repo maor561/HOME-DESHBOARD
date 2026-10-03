@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>משפחת כהן · סקיצת Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f0e6; --card: #fffdf9; --ink: #1f2a3d; --soft: #6d7686; --faint: #a9afb9; --line: #e8dfd0;
+    --accent: #c2501c; --accent-soft: #fbe6d8; --ok: #2f9e7a; --danger: #c93c3c;
+    --sky: linear-gradient(160deg, #2a2552 0%, #b54a72 55%, #f59e56 100%);
+    --r: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #1b1d27; }
+  body { font: 500 16px/1.4 'Assistant', system-ui, sans-serif; color: var(--ink); }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; }
+  .serif { font-family: 'Frank Ruhl Libre', serif; }
+  svg.ic { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .phone { position: relative; max-width: 430px; height: 100dvh; margin: 0 auto; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+  .screen { flex: 1; overflow-y: auto; padding: 0 16px 24px; scroll-behavior: smooth; }
+  .top { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg) 78%, transparent); padding: 18px 0 12px; display: flex; align-items: center; gap: 10px; }
+  .top h1 { font: 700 28px/1.1 'Frank Ruhl Libre', serif; flex: 1; }
+  .top .back { width: 44px; height: 44px; border-radius: 14px; background: var(--card); display: grid; place-items: center; box-shadow: 0 1px 0 var(--line); }
+  .top .back .ic { transform: scaleX(-1); }
+  .sub { color: var(--soft); font-size: 15px; margin: -6px 0 14px; }
+
+  .card { background: var(--card); border-radius: var(--r); padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 0 var(--line), 0 8px 24px rgba(60,40,10,.05); }
+  .card h2 { font: 700 13px/1 'Assistant', sans-serif; letter-spacing: .1em; color: var(--soft); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .card h2::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .card h2 small { margin-inline-start: auto; font-size: 13px; letter-spacing: 0; font-weight: 600; color: var(--accent); }
+  .chip { display: inline-flex; align-items: center; justify-content: center; min-width: 58px; padding: 3px 11px; border-radius: 99px; background: var(--c, var(--line)); color: #fff; font-size: 14px; font-weight: 700; white-space: nowrap; flex: none; }
+  .field { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+  .field + .field { border-top: 1px solid var(--line); }
+  .field > label { color: var(--soft); font-size: 14px; font-weight: 700; min-width: 58px; }
+  .in { flex: 1; min-width: 0; height: 46px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; padding: 0 13px; font-weight: 600; }
+  .in:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .in::placeholder { color: var(--faint); font-weight: 500; }
+  .btn { height: 50px; border-radius: 16px; background: var(--accent); color: #fff; font-weight: 700; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn.ghost { background: var(--accent-soft); color: var(--accent); }
+  .btn.wide { width: 100%; }
+  .btn.sm { height: 40px; border-radius: 13px; font-size: 14px; padding: 0 13px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; min-height: 56px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .main { flex: 1; min-width: 0; }
+  .row .main b { display: block; font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .main small { display: block; font-size: 14px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.done .main b { text-decoration: line-through; color: var(--faint); }
+  .av { width: 42px; height: 42px; border-radius: 50%; background: var(--c, var(--line)); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 18px; flex: none; }
+  .icbtn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--soft); flex: none; }
+  .icbtn:active { background: var(--line); }
+  .icbtn.danger { color: var(--danger); }
+  .check { width: 28px; height: 28px; border-radius: 9px; border: 2px solid var(--faint); display: grid; place-items: center; flex: none; color: transparent; }
+  .done .check { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .days { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 14px; padding: 0 16px; scrollbar-width: none; }
+  .days button { flex: 1 0 auto; min-width: 54px; height: 62px; border-radius: 16px; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; position: relative; box-shadow: 0 1px 0 var(--line); }
+  .days button small { font-size: 12px; color: var(--soft); font-weight: 600; }
+  .days button[aria-pressed="true"] { background: var(--ink); color: #fff; } .days button[aria-pressed="true"] small { color: rgba(255,255,255,.7); }
+  .days button.full::after { content: ''; position: absolute; top: 7px; inset-inline-end: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+  .days button.part::after { content: ''; position: absolute; top: 7px; inset-inline-end: 8px; width: 7px; height: 7px; border-radius: 50%; background: #e0a020; }
+  .seg { display: flex; background: var(--line); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+  .seg button { flex: 1; height: 40px; border-radius: 11px; font-weight: 700; color: var(--soft); }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .tog { width: 50px; height: 30px; border-radius: 99px; background: var(--faint); position: relative; flex: none; transition: background .2s; }
+  .tog::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .tog[aria-pressed="true"] { background: var(--ok); } .tog[aria-pressed="true"]::after { transform: translateX(-20px); }
+  .tag { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .tag.grey { background: var(--line); color: var(--soft); }
+
+  /* בית */
+  .hero { border-radius: 26px; padding: 20px; color: #fff; background: var(--sky); margin-bottom: 14px; position: relative; overflow: hidden; }
+  .hero small { opacity: .85; font-weight: 600; } .hero .clock { font: 500 64px/1 'Frank Ruhl Libre', serif; direction: ltr; text-align: right; margin: 4px 0; }
+  .hero .live { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,.25); border-radius: 99px; padding: 4px 12px; font-size: 13px; font-weight: 700; margin-top: 10px; }
+  .hero .live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #6ee7a8; }
+  .hero a { position: absolute; inset-inline-end: 16px; bottom: 18px; color: #fff; font-weight: 700; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+  .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .quick button { background: var(--card); border-radius: var(--r); padding: 14px; text-align: right; box-shadow: 0 1px 0 var(--line); min-height: 86px; display: flex; flex-direction: column; justify-content: space-between; }
+  .quick button b { font-size: 16px; } .quick button small { color: var(--soft); font-size: 13px; }
+  .quick .emo { font-size: 24px; }
+  .nudge { background: #fff4d6; border-radius: 16px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; margin-bottom: 14px; font-weight: 600; font-size: 15px; }
+  .nudge button { margin-inline-start: auto; color: var(--accent); font-weight: 700; white-space: nowrap; }
+
+  /* תצוגת שבוע */
+  .wk { border-top: 1px solid var(--line); padding: 12px 0; } .wk:first-of-type { border: 0; padding-top: 0; }
+  .wk h3 { font: 700 19px 'Frank Ruhl Libre', serif; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .wk h3 button { margin-inline-start: auto; color: var(--accent); font: 700 14px 'Assistant', sans-serif; }
+  .wk p { font-size: 15px; display: flex; gap: 8px; padding: 2px 0; } .wk p span { color: var(--soft); min-width: 52px; font-weight: 700; font-size: 13px; padding-top: 2px; } .wk p i { font-style: normal; color: var(--faint); }
+
+  /* תמונות / סגנון */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid3 img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: var(--line); display: block; }
+  .styles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .styles button { border-radius: 18px; padding: 8px 8px 10px; border: 2.5px solid transparent; background: var(--bg); font-weight: 700; }
+  .styles button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .thumb { height: 86px; border-radius: 12px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .thumb.glass { background: var(--sky); } .thumb.glass i { position: absolute; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.35); border-radius: 6px; }
+  .thumb.board { background: #e7dccb; } .thumb.board i { position: absolute; border-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+
+  /* ניווט תחתון, FAB, גיליון */
+  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--card); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .tabs button { height: 56px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 700; color: var(--soft); }
+  .tabs button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+  .fab { position: absolute; inset-inline-end: 18px; bottom: 88px; width: 60px; height: 60px; border-radius: 20px; background: var(--accent); color: #fff; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(194,80,28,.4); z-index: 6; }
+  .fab .ic { width: 28px; height: 28px; }
+  .scrim { position: absolute; inset: 0; background: rgba(20,16,10,.45); z-index: 10; display: flex; align-items: flex-end; }
+  .sheet { background: var(--bg); width: 100%; border-radius: 26px 26px 0 0; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 88%; overflow-y: auto; animation: up .25s ease; }
+  .sheet::before { content: ''; display: block; width: 44px; height: 5px; border-radius: 9px; background: var(--faint); margin: 0 auto 12px; }
+  .sheet h2 { font: 700 24px 'Frank Ruhl Libre', serif; margin-bottom: 12px; }
+  .sheet .lbl { font-size: 13px; font-weight: 700; color: var(--soft); margin: 12px 0 6px; }
+  .pick { display: flex; flex-wrap: wrap; gap: 7px; }
+  .pick button { min-width: 46px; height: 44px; padding: 0 13px; border-radius: 13px; background: var(--card); font-weight: 700; border: 2px solid transparent; box-shadow: 0 1px 0 var(--line); }
+  .pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @keyframes up { from { transform: translateY(40px); opacity: 0; } }
+
+  /* PIN */
+  .pin { position: absolute; inset: 0; z-index: 20; background: var(--sky); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+  .pin h1 { font: 700 34px 'Frank Ruhl Libre', serif; } .pin p { opacity: .85; margin-top: -16px; }
+  .dots { display: flex; gap: 14px; direction: ltr; } .dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; } .dots i.on { background: #fff; }
+  .keys { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px; direction: ltr; }
+  .keys button { height: 72px; border-radius: 50%; background: rgba(255,255,255,.16); color: #fff; font: 500 28px 'Frank Ruhl Libre', serif; }
+  .keys button:active { background: rgba(255,255,255,.35); }
+  .toast { position: absolute; bottom: 92px; inset-inline: 16px; background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-weight: 600; z-index: 30; text-align: center; animation: up .25s ease; }
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+
+<script>
+const P = {
+  home: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z',
+  food: 'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7',
+  cal: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4', check: 'M20 6 9 17l-5-5', tasks: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  more: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z', plus: 'M12 5v14M5 12h14', copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  trash: 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14', pen: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z', chev: 'M15 18l-6-6 6-6',
+  grip: 'M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01', up: 'M12 19V5M5 12l7-7 7 7',
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+
+const M = {
+  maor: { name: 'מאור', c: '#2f9e7a', born: '15.9.1984' }, nofar: { name: 'נופר', c: '#0f9aa8', born: '14.8.1991' },
+  alma: { name: 'אלמה', c: '#e2607a', born: '1.6.2015' }, gaya: { name: 'גאיה', c: '#8a63d2', born: '30.9.2017' },
+  eylon: { name: 'אילון', c: '#3f8fdc', born: '7.9.2020' }, neri: { name: 'נרי', c: '#e08a1a', born: '29.10.2022' },
+};
+const KIDS = ['alma', 'gaya', 'eylon', 'neri'];
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+// נתוני דוגמה בלבד
+const WEEK = [
+  { s: ['פיתה עם חומוס ומלפפון', 'לחמנייה עם גבינה צהובה', 'טוסט גבינה לבנה וזיתים', 'פרוסה עם אבוקדו'], l: 'שניצל, אורז וסלט', d: 'פסטה ברוטב עגבניות' },
+  { s: ['כריך טונה', 'פיתה עם שוקולד', 'לחמנייה עם חביתה', 'פרוסה עם גבינה'], l: 'קציצות ופירה', d: 'שקשוקה' },
+  { s: ['', '', '', ''], l: 'עוף בתנור ותפוחי אדמה', d: '' },
+  { s: ['', '', '', ''], l: '', d: '' }, { s: ['', '', '', ''], l: '', d: '' },
+  { s: null, l: 'ארוחת שישי', d: 'ארוחת שישי משפחתית' }, { s: null, l: '', d: '' },
+];
+const ACTS = [
+  { day: 0, who: 'alma', icon: '🤸', title: 'התעמלות קרקע', time: '16:00–17:15', place: 'מרכז הספורט' },
+  { day: 0, who: 'eylon', icon: '⚽', title: 'כדורגל', time: '17:00–18:00', place: 'מגרש השכונה' },
+  { day: 1, who: 'gaya', icon: '🎨', title: 'ציור', time: '16:30–17:30', place: 'המתנ״ס' },
+  { day: 2, who: 'alma', icon: '🎹', title: 'פסנתר', time: '15:30–16:15', place: 'הקונסרבטוריון' },
+  { day: 3, who: 'eylon', icon: '⚽', title: 'כדורגל', time: '17:00–18:00', place: 'מגרש השכונה' },
+];
+const TASKS = [
+  { t: 'לקנות חלב', who: 'maor', due: 'היום', done: true }, { t: 'להכין תיקים לבית הספר', who: 'alma', due: 'היום', hi: true, rep: 'כל יום' },
+  { t: 'לשלם חשבון חשמל', who: 'nofar', due: 'מחר' }, { t: 'להזמין ניקיון', due: 'יום ג׳' }, { t: 'להוציא פחים', who: 'maor', due: 'יום ד׳', rep: 'כל שבוע' },
+];
+const EXTRA = [{ name: 'סבתא', date: '12.11', days: 40 }, { name: 'סבא', date: '3.12', days: 61 }];
+const QUOTES = [{ q: 'הדברים הגדולים מתחילים בצעדים קטנים.', on: true, date: 'היום' }, { q: 'כל יום הוא התחלה חדשה.', on: true }, { q: 'ביחד אנחנו יכולים הכול.', on: true }, { q: 'טעות היא רק עוד דרך ללמוד.', on: false }];
+const WIDGETS = [['מזג אוויר ותחזית', 1], ['זריחה ושקיעה', 1], ['כריכים למחר', 1], ['מה אוכלים היום', 1], ['חוגים היום', 1], ['משימות', 1], ['ימי הולדת קרובים', 1], ['תמונות מתחלפות', 1], ['משפט היום', 1], ['מצב הבית (אין חיישן)', 0]];
+
+const S = { screen: 'home', day: 0, view: 'day', style: 'glass', sheet: null, pin: '', locked: true, toast: '' };
+const app = document.getElementById('app');
+const head = (title, back) => `<div class="top">${back ? `<button class="back" data-go="more" aria-label="חזרה">${ic('chev')}</button>` : ''}<h1>${title}</h1></div>`;
+const chip = k => `<span class="chip" style="--c:${M[k].c}">${M[k].name}</span>`;
+const status = d => !d.s ? (d.l || d.d ? 'part' : '') : d.s.every(Boolean) && d.l && d.d ? 'full' : d.s.some(Boolean) || d.l || d.d ? 'part' : '';
+
+const SCREENS = {
+  home: () => `${head('ערב טוב, מאור')}
+    <div class="hero"><small>מוצג עכשיו על המסך בבית</small><div class="clock">${new Date().toTimeString().slice(0, 5)}</div><small>סגנון: ${S.style === 'glass' ? 'זכוכית ושמיים' : 'לוח המקרר'} · יקנעם עילית 26°</small><br><span class="live">מחובר · עודכן לפני דקה</span><a href="dashboard-v3.html">פתיחת המסך</a></div>
+    <div class="nudge">🥪 חסרים כריכים ל-3 ימים השבוע<button data-go="menu">להשלים</button></div>
+    <div class="quick">
+      <button data-go="menu"><span class="emo">🥪</span><span><b>כריכים למחר</b><br><small>יום ראשון · 4 מתוך 4</small></span></button>
+      <button data-go="menu"><span class="emo">🍝</span><span><b>מה אוכלים היום</b><br><small>צהריים וערב</small></span></button>
+      <button data-sheet="task"><span class="emo">✅</span><span><b>משימה חדשה</b><br><small>3 פתוחות</small></span></button>
+      <button data-go="photos"><span class="emo">🖼️</span><span><b>העלאת תמונות</b><br><small>24 תמונות במסך</small></span></button>
+    </div>
+    <div class="card"><h2>היום בבית</h2>
+      <div class="row"><span class="av" style="--c:#e08a1a">🍽</span><span class="main"><b>שניצל, אורז וסלט</b><small>צהריים · ערב: פסטה ברוטב עגבניות</small></span><button class="icbtn" data-go="menu" aria-label="עריכה">${ic('pen')}</button></div>
+      <div class="row"><span class="av" style="--c:${M.alma.c}">🤸</span><span class="main"><b>2 חוגים היום</b><small>אלמה 16:00 · אילון 17:00</small></span><button class="icbtn" data-go="acts" aria-label="עריכה">${ic('pen')}</button></div>
+      <div class="row"><span class="av" style="--c:${M.neri.c}">🎂</span><span class="main"><b>יום הולדת 4 לנרי בעוד 26 ימים</b><small>29 באוקטובר</small></span></div>
+    </div>`,
+
+  menu: () => {
+    const d = WEEK[S.day];
+    const day = `<div class="days">${DAYS.map((n, i) => `<button data-day="${i}" aria-pressed="${i === S.day}" class="${status(WEEK[i])}">${n}<small>${4 + i}.10</small></button>`).join('')}</div>
+      ${d.s ? `<div class="card"><h2>כריכים לבית הספר<small data-toast="הועתק מיום ${DAYS[(S.day + 6) % 7]}">העתק מאתמול</small></h2>
+        ${KIDS.map((k, i) => `<div class="field">${chip(k)}<input class="in" value="${d.s[i]}" placeholder="מה בכריך?" aria-label="כריך של ${M[k].name}"></div>`).join('')}</div>`
+        : `<div class="card"><h2>כריכים לבית הספר</h2><div class="row"><span class="main"><small>אין בית ספר ביום ${DAYS[S.day]}</small></span><button class="tog" aria-pressed="false" aria-label="יש בית ספר"></button></div></div>`}
+      <div class="card"><h2>ארוחות</h2>
+        <div class="field"><label>צהריים</label><input class="in" value="${d.l}" placeholder="מה אוכלים?"></div>
+        <div class="field"><label>ערב</label><input class="in" value="${d.d}" placeholder="מה אוכלים?"></div>
+        <div class="field"><label>הערה</label><input class="in" placeholder="למשל: להפשיר עוף בבוקר"></div></div>
+      <button class="btn wide" data-toast="נשמר · המסך בבית התעדכן">שמירה</button>`;
+    const week = `<div class="card">${WEEK.map((w, i) => `<div class="wk"><h3>${DAYS[i]} <span class="tag ${status(w) === 'full' ? '' : 'grey'}">${status(w) === 'full' ? 'מלא' : status(w) === 'part' ? 'חלקי' : 'ריק'}</span><button data-day="${i}" data-view="day">עריכה</button></h3>
+        ${w.s ? KIDS.map((k, j) => `<p><span style="color:${M[k].c}">${M[k].name}</span>${w.s[j] || '<i>—</i>'}</p>`).join('') : ''}
+        <p><span>צהריים</span>${w.l || '<i>—</i>'}</p><p><span>ערב</span>${w.d || '<i>—</i>'}</p></div>`).join('')}</div>
+      <button class="btn ghost wide" data-toast="השבוע הקודם הועתק">${ic('copy')} העתקת כל השבוע הקודם</button>`;
+    return `${head('תפריט שבועי')}<p class="sub">שבוע 4–10 באוקטובר · המסך מציג כריכים של מחר ואוכל של היום</p>
+      <div class="seg"><button data-view="day" aria-pressed="${S.view === 'day'}">יום</button><button data-view="week" aria-pressed="${S.view === 'week'}">כל השבוע</button></div>${S.view === 'day' ? day : week}`;
+  },
+
+  acts: () => `${head('חוגים')}<p class="sub">חוזרים כל שבוע · המסך מציג רק את של היום</p>
+    ${DAYS.map((n, i) => { const list = ACTS.filter(a => a.day === i); return list.length ? `<div class="card"><h2>יום ${n}</h2>${list.map(a => `<div class="row"><span class="av" style="--c:${M[a.who].c}">${a.icon}</span>
+      <span class="main"><b>${M[a.who].name} · ${a.title}</b><small>${a.time} · ${a.place}</small></span>
+      <button class="icbtn" data-toast="החוג שוכפל" aria-label="שכפול">${ic('copy')}</button><button class="icbtn" data-sheet="act" aria-label="עריכה">${ic('pen')}</button></div>`).join('')}</div>` : ''; }).join('')}
+    <button class="fab" data-sheet="act" aria-label="חוג חדש">${ic('plus')}</button>`,
+
+  tasks: () => `${head('משימות')}
+    <div class="seg"><button aria-pressed="true">פתוחות</button><button aria-pressed="false">הכול</button><button aria-pressed="false">חוזרות</button></div>
+    <div class="card">${TASKS.map((t, i) => `<div class="row ${t.done ? 'done' : ''}"><button class="check" data-task="${i}" aria-label="סימון">${ic('check')}</button>
+      <span class="main"><b>${t.t}</b><small>${t.due}${t.rep ? ` · 🔁 ${t.rep}` : ''}${t.hi ? ' · עדיפות גבוהה' : ''}</small></span>${t.who ? chip(t.who) : ''}</div>`).join('')}</div>
+    <button class="fab" data-sheet="task" aria-label="משימה חדשה">${ic('plus')}</button>`,
+
+  more: () => `${head('עוד')}
+    <div class="card">${[['family', '👨‍👩‍👧‍👦', 'משפחה', '6 בני משפחה'], ['bdays', '🎂', 'ימי הולדת', 'המשפחה ועוד 2 אנשים'], ['quotes', '💬', 'משפט היום', '3 פעילים במאגר'], ['photos', '🖼️', 'תמונות', '24 תמונות'], ['settings', '⚙️', 'הגדרות ותצוגה', 'סגנון, מזג אוויר, לילה, PIN']]
+      .map(([go, e, t, s]) => `<button class="row" data-go="${go}" style="width:100%;text-align:right"><span class="av" style="--c:var(--accent-soft)">${e}</span><span class="main"><b>${t}</b><small>${s}</small></span>${ic('chev')}</button>`).join('')}</div>
+    <button class="btn ghost wide" data-lock>🔒 נעילה</button>`,
+
+  family: () => `${head('משפחה', 1)}<div class="card">${Object.values(M).map(p => `<div class="row"><span class="av" style="--c:${p.c}">${p.name[0]}</span><span class="main"><b>${p.name}</b><small>${p.born}</small></span><button class="icbtn" aria-label="עריכה">${ic('pen')}</button></div>`).join('')}</div>
+    <button class="btn ghost wide">${ic('plus')} הוספת בן משפחה</button>`,
+
+  bdays: () => `${head('ימי הולדת', 1)}<p class="sub">המסך מציג את שלושת הקרובים ביותר</p>
+    <div class="card"><h2>בני המשפחה<small>מתעדכן אוטומטית</small></h2>${[['neri', '29.10', 26], ['alma', '1.6', 241], ['nofar', '14.8', 315]].map(([k, d, n]) => `<div class="row"><span class="av" style="--c:${M[k].c}">${M[k].name[0]}</span><span class="main"><b>${M[k].name}</b><small>${d} · בעוד ${n} ימים</small></span></div>`).join('')}
+      <div class="row"><span class="main"><small>ועוד 3: אילון, מאור, גאיה</small></span></div></div>
+    <div class="card"><h2>אנשים נוספים</h2>${EXTRA.map(p => `<div class="row"><span class="av" style="--c:#c98a3a">🎂</span><span class="main"><b>${p.name}</b><small>${p.date} · בעוד ${p.days} ימים</small></span><button class="icbtn" data-sheet="bday" aria-label="עריכה">${ic('pen')}</button><button class="icbtn danger" aria-label="מחיקה">${ic('trash')}</button></div>`).join('')}</div>
+    <button class="btn wide" data-sheet="bday">${ic('plus')} הוספת יום הולדת</button>`,
+
+  quotes: () => `${head('משפט היום', 1)}<p class="sub">המסך בוחר כל יום משפט פעיל מהמאגר, אלא אם קבעת משפט לתאריך</p>
+    <div class="card">${QUOTES.map(q => `<div class="row"><span class="main"><b style="white-space:normal;font-family:'Frank Ruhl Libre',serif">״${q.q}״</b>${q.date ? `<small><span class="tag">נקבע ל${q.date}</span></small>` : ''}</span><button class="tog" aria-pressed="${q.on}" data-tog aria-label="פעיל"></button></div>`).join('')}</div>
+    <button class="btn wide">${ic('plus')} משפט חדש</button>`,
+
+  photos: () => `${head('תמונות', 1)}<button class="btn wide" style="margin-bottom:14px" data-toast="נפתחת גלריית הטלפון">${ic('up')} העלאה מהטלפון</button>
+    <div class="card"><h2>במסך עכשיו<small>24 תמונות</small></h2><div class="grid3">${Array.from({ length: 9 }, (_, i) => `<img src="https://picsum.photos/seed/cohen-${i}/240/240" alt="">`).join('')}</div></div>
+    <div class="card"><h2>הצגה</h2><div class="field"><label style="min-width:120px">החלפה כל</label><select class="in"><option>30 שניות</option><option>דקה</option><option>5 דקות</option></select></div>
+      <div class="row"><span class="main"><b>סדר אקראי</b></span><button class="tog" aria-pressed="true" data-tog></button></div></div>`,
+
+  settings: () => `${head('הגדרות ותצוגה', 1)}
+    <div class="card"><h2>סגנון המסך</h2><div class="styles">
+      <button data-style="glass" aria-pressed="${S.style === 'glass'}"><div class="thumb glass"><i style="inset:10px 10px auto 52%;height:30px"></i><i style="inset:46px 10px 10px 52%"></i><i style="inset:10px 52% 44px 10px"></i><i style="inset:50px 52% 10px 10px"></i></div>זכוכית ושמיים</button>
+      <button data-style="board" aria-pressed="${S.style === 'board'}"><div class="thumb board"><i style="inset:8px 8px auto 60%;height:34px;background:#7fb6ea;border:3px solid #fff;border-radius:20px 20px 2px 2px"></i><i style="inset:48px 30% 8px 34%;background:#dcebf7;transform:rotate(-2deg)"></i><i style="inset:44px 72% 8px 8px;background:#fff3a8;transform:rotate(2deg)"></i><i style="inset:8px 68% 46px 10px;background:#fff;transform:rotate(-3deg)"></i></div>לוח המקרר</button>
+    </div></div>
+    <div class="card"><h2>כללי</h2>
+      <div class="field"><label style="min-width:90px">שם המשפחה</label><input class="in" value="משפחת כהן"></div>
+      <div class="field"><label style="min-width:90px">עיר</label><input class="in" value="יקנעם עילית"></div>
+      <div class="field"><label style="min-width:90px">יחידות</label><select class="in"><option>צלזיוס</option><option>פרנהייט</option></select></div>
+      <div class="field"><label style="min-width:90px">גודל טקסט</label><select class="in"><option>רגיל</option><option>גדול</option><option>גדול מאוד</option></select></div></div>
+    <div class="card"><h2>לילה מעומעם</h2><div class="row"><span class="main"><b>שעון בלבד בלילה</b><small>כדי לא להאיר את הסלון</small></span><button class="tog" aria-pressed="true" data-tog></button></div>
+      <div class="two" style="margin-top:8px"><input class="in" type="time" value="22:30" aria-label="משעה"><input class="in" type="time" value="06:00" aria-label="עד שעה"></div></div>
+    <div class="card"><h2>מה מוצג ובאיזה סדר</h2>${WIDGETS.map(([n, on]) => `<div class="row" style="min-height:50px;padding:6px 0"><span style="color:var(--faint)">${ic('grip')}</span><span class="main"><b style="font-size:16px">${n}</b></span><button class="tog" aria-pressed="${!!on}" data-tog></button></div>`).join('')}</div>
+    <div class="card"><h2>אבטחה ונתונים</h2><div class="row"><span class="main"><b>שינוי קוד PIN</b></span>${ic('chev')}</div><div class="row"><span class="main"><b>שמירת נתונים</b><small>מקומי במכשיר הזה · חיבור לענן בהמשך</small></span><span class="tag grey">מקומי</span></div></div>`,
+};
+
+const SHEETS = {
+  act: () => `<h2>חוג</h2><div class="lbl">מי</div><div class="pick">${KIDS.map((k, i) => `<button aria-pressed="${!i}" data-pick>${M[k].name}</button>`).join('')}</div>
+    <div class="lbl">שם החוג</div><input class="in" style="width:100%" value="התעמלות קרקע">
+    <div class="lbl">יום בשבוע</div><div class="pick">${['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((d, i) => `<button aria-pressed="${!i}" data-pick="multi">${d}</button>`).join('')}</div>
+    <div class="two"><div><div class="lbl">התחלה</div><input class="in" style="width:100%" type="time" value="16:00"></div><div><div class="lbl">סיום</div><input class="in" style="width:100%" type="time" value="17:15"></div></div>
+    <div class="lbl">מקום</div><input class="in" style="width:100%" value="מרכז הספורט">
+    <div class="lbl">אייקון</div><div class="pick">${['🤸', '⚽', '🎨', '🎹', '🥋', '🏊', '💃', '🎸', '♟️', '🏀'].map((e, i) => `<button aria-pressed="${!i}" data-pick>${e}</button>`).join('')}</div>
+    <div class="two" style="margin-top:18px"><button class="btn ghost" data-close>ביטול</button><button class="btn" data-close data-toast="החוג נשמר">שמירה</button></div>
+    <button class="btn sm wide" style="background:none;color:var(--danger);margin-top:8px" data-close>מחיקת החוג</button>`,
+  task: () => `<h2>משימה חדשה</h2><input class="in" style="width:100%" placeholder="מה צריך לעשות?">
+    <div class="lbl">למי</div><div class="pick"><button aria-pressed="true" data-pick>כולם</button>${Object.values(M).map(p => `<button aria-pressed="false" data-pick>${p.name}</button>`).join('')}</div>
+    <div class="lbl">מתי</div><div class="pick">${['היום', 'מחר', 'השבוע', 'תאריך…'].map((d, i) => `<button aria-pressed="${!i}" data-pick>${d}</button>`).join('')}</div>
+    <div class="lbl">חוזרת</div><div class="pick">${['חד-פעמית', 'כל יום', 'כל שבוע', 'כל חודש'].map((d, i) => `<button aria-pressed="${!i}" data-pick>${d}</button>`).join('')}</div>
+    <div class="lbl">עדיפות</div><div class="pick">${['רגילה', 'גבוהה'].map((d, i) => `<button aria-pressed="${!i}" data-pick>${d}</button>`).join('')}</div>
+    <div class="two" style="margin-top:18px"><button class="btn ghost" data-close>ביטול</button><button class="btn" data-close data-toast="המשימה נוספה">הוספה</button></div>`,
+  bday: () => `<h2>יום הולדת</h2><div class="lbl">שם</div><input class="in" style="width:100%" placeholder="למשל: סבתא, חבר מהגן">
+    <div class="lbl">תאריך לידה</div><input class="in" style="width:100%" type="date">
+    <div class="row"><span class="main"><b>השנה לא ידועה</b><small>יוצג בלי גיל</small></span><button class="tog" aria-pressed="false" data-tog></button></div>
+    <div class="lbl">אייקון</div><div class="pick">${['🎂', '👵', '👴', '🧒', '👧', '👦', '🧑', '🐶'].map((e, i) => `<button aria-pressed="${!i}" data-pick>${e}</button>`).join('')}</div>
+    <div class="two" style="margin-top:18px"><button class="btn ghost" data-close>ביטול</button><button class="btn" data-close data-toast="יום ההולדת נשמר">שמירה</button></div>`,
+};
+
+function render() {
+  const tab = ['home', 'menu', 'acts', 'tasks'].includes(S.screen) ? S.screen : 'more';
+  const keep = app.querySelector('.screen')?.scrollTop ?? 0;
+  app.innerHTML = `<main class="screen">${SCREENS[S.screen]()}</main>
+    <nav class="tabs" aria-label="ניווט">${[['home', 'home', 'בית'], ['menu', 'food', 'תפריט'], ['acts', 'cal', 'חוגים'], ['tasks', 'tasks', 'משימות'], ['more', 'more', 'עוד']]
+      .map(([go, i, t]) => `<button data-go="${go}" ${go === tab ? 'aria-current="page"' : ''}>${ic(i)}${t}</button>`).join('')}</nav>
+    ${S.sheet ? `<div class="scrim" data-close><div class="sheet" role="dialog" aria-modal="true">${SHEETS[S.sheet]()}</div></div>` : ''}
+    ${S.toast ? `<div class="toast" role="status">${S.toast}</div>` : ''}
+    ${S.locked ? `<div class="pin"><h1>משפחת כהן</h1><p>הקישו קוד כדי לנהל את המסך</p><div class="dots">${[0, 1, 2, 3].map(i => `<i class="${i < S.pin.length ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : `<button data-key="${k}">${k}</button>`).join('')}</div></div>` : ''}`;
+  if (render.last === S.screen) app.querySelector('.screen').scrollTop = keep;
+  render.last = S.screen;
+}
+function toast(msg) { S.toast = msg; render(); clearTimeout(toast.t); toast.t = setTimeout(() => { S.toast = ''; render(); }, 1800); }
+
+app.addEventListener('click', e => {
+  const el = e.target.closest('button, [data-close], [data-toast]'); if (!el) return;
+  const d = el.dataset;
+  if (d.key !== undefined) { S.pin = d.key === '⌫' ? S.pin.slice(0, -1) : S.pin + d.key; if (S.pin.length === 4) { S.locked = false; S.pin = ''; } return render(); }
+  if (el.matches('.sheet *') && !('close' in d) && !('pick' in d) && !('tog' in d)) return;
+  if ('pick' in d) { if (d.pick !== 'multi') el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false')); el.setAttribute('aria-pressed', d.pick === 'multi' ? String(el.getAttribute('aria-pressed') !== 'true') : 'true'); return; }
+  if ('tog' in d) { el.setAttribute('aria-pressed', String(el.getAttribute('aria-pressed') !== 'true')); return; }
+  if ('close' in d) { if (el.classList.contains('scrim') && e.target !== el) return; S.sheet = null; }
+  if ('lock' in d) S.locked = true;
+  if (d.go) { S.screen = d.go; S.sheet = null; }
+  if (d.day !== undefined) S.day = +d.day;
+  if (d.view) S.view = d.view;
+  if (d.style) S.style = d.style;
+  if (d.sheet) S.sheet = d.sheet;
+  if (d.task !== undefined) TASKS[d.task].done = !TASKS[d.task].done;
+  if (d.toast) return toast(d.toast);
+  render();
+});
+const q = new URLSearchParams(location.search);
+if (q.get('screen')) { S.screen = q.get('screen'); S.locked = false; }
+render();
+</script>
+</body>
+</html>
