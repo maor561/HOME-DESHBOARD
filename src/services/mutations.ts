@@ -133,6 +133,9 @@ const cloud = () => (store.mode === 'cloud' ? (store as SupabaseStore) : null);
 async function kidAction(name: string, args: Record<string, unknown>, direct: () => Promise<void>): Promise<void> {
   const store_ = cloud();
   if (!store_) return direct();
+  // הורה מחובר: כותבים ישירות, בלי לנסות קודם את מסלול הילד (שהיה נכשל ומשאיר שגיאה בקונסול)
+  const session = await store_.getSession();
+  if (session && !session.user.is_anonymous) return direct();
   const { error } = await store_.client.rpc(name, args);
   if (!error) return store_.reload();
   if (/not a kid device/i.test(error.message)) return direct();
