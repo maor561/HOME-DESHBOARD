@@ -13,6 +13,7 @@ npm run dev
 - המסך של הילד: http://localhost:5180/kid (במצב מקומי בוחרים ילד; אפשר גם `/kid?member=alma`)
 - הניהול: http://localhost:5180/admin (קוד פתיחה: `1234`, מחליפים בהגדרות)
 - מצב בוקר ויום הולדת לבדיקה: `?time=07:17&mode=morning`, `?date=2026-10-29`
+- מצב ערב וסיכום שבועי לבדיקה: `?mode=evening`, `?mode=summary`
 - בדיקת מצבים במסך: `?time=18:10&weather=rain` (ערכי weather: `clear`, `clouds`, `rain`, `fog`, `snow`)
 
 `npm run build` בונה גרסת הפצה ל-`dist/`, ו-`npm run typecheck` בודק טיפוסים.
@@ -63,6 +64,7 @@ docs/
 1. `docs/supabase-schema.sql`: הטבלאות, אחסון התמונות, Realtime.
 2. `docs/supabase-002-viewer-access.sql`: מנהלים ומסכים מאושרים (חיבור ב-QR).
 3. `docs/supabase-003-features.sql`: רשימת קניות, מצב בוקר, מסך הילד, כוכבים ובקשות כריך.
+4. `docs/supabase-004-evening-rewards.sql`: מצב ערב (הכנות לכל ילד), פרסים, סיכום שבועי והודעות למסך.
 
 ## הרשאות וחיבור מסכים
 

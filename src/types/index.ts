@@ -113,6 +113,68 @@ export interface MealRequest {
   createdAt: string;
 }
 
+/** הכנה בשגרת הערב של ילד מסוים ("תיק מוכן", "מקלחת") */
+export interface RoutineItem {
+  id: ID;
+  familyId: ID;
+  memberId: ID;
+  text: string;
+  sortOrder: number;
+}
+
+/** סימון שהכנה בוצעה בתאריך מסוים. קיום השורה פירושו "בוצע". */
+export interface RoutineCheck {
+  id: ID;
+  familyId: ID;
+  itemId: ID;
+  memberId: ID;
+  date: ISODate;
+}
+
+export interface Reward {
+  id: ID;
+  familyId: ID;
+  title: string;
+  icon: string;
+  /** מחיר בכוכבים */
+  cost: number;
+  /** פרס לילד מסוים, או null לכל הילדים */
+  memberId: ID | null;
+}
+
+/** בקשה של ילד לממש פרס. הכוכבים יורדים רק כשהורה מאשר. */
+export interface RewardRequest {
+  id: ID;
+  familyId: ID;
+  memberId: ID;
+  rewardId: ID;
+  title: string;
+  cost: number;
+  status: 'pending' | 'approved' | 'declined';
+  createdAt: string;
+}
+
+/** הודעה שקופצת על המסך בבית לזמן מוגבל */
+export interface ScreenMessage {
+  id: ID;
+  familyId: ID;
+  text: string;
+  sender: string;
+  createdAt: string;
+  /** null = עד שמסירים אותה */
+  expiresAt: string | null;
+}
+
+/** יומן כוכבים: כל הוספה או הורדה. משמש לסיכום השבועי. */
+export interface StarLog {
+  id: ID;
+  familyId: ID;
+  memberId: ID;
+  amount: number;
+  kind: 'task' | 'reward' | 'manual';
+  createdAt: string;
+}
+
 export interface Photo {
   id: ID;
   familyId: ID;
@@ -169,6 +231,12 @@ export interface Settings {
   calendar: { holidays: boolean; funDays: boolean; shabbat: boolean; hidden: string[] };
   /** מסך היציאה מהבית: באילו ימים, ממתי, ומתי יוצאים */
   morning: { enabled: boolean; from: Time; leave: Time; days: number[] };
+  /** "מתכוננים למחר": באילו ערבים ובאילו שעות */
+  evening: { enabled: boolean; from: Time; to: Time; days: number[] };
+  /** "השבוע שלנו": באיזה יום ובאילו שעות */
+  summary: { enabled: boolean; weekday: number; from: Time; to: Time };
+  /** האם גם ילדים יכולים לשלוח הודעה למסך */
+  kidsCanMessage: boolean;
   photoIntervalSec: number;
   photoShuffle: boolean;
   /** קוד הכניסה ל-Admin. בשלב המקומי נשמר כטקסט; בענן יוחלף ב-Supabase Auth. */
@@ -187,6 +255,12 @@ export interface Database {
   events: CalendarEvent[];
   shopping_items: ShoppingItem[];
   meal_requests: MealRequest[];
+  routine_items: RoutineItem[];
+  routine_checks: RoutineCheck[];
+  rewards: Reward[];
+  reward_requests: RewardRequest[];
+  messages: ScreenMessage[];
+  star_log: StarLog[];
   settings: Settings[];
 }
 

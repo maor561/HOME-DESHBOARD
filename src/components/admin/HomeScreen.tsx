@@ -25,11 +25,12 @@ export function HomeScreen({ go }: ScreenProps) {
   const meal = (kind: 'lunch' | 'dinner') => db.meals.find((m) => m.date === today && m.kind === kind)?.text;
   const activities = db.activities.filter((a) => a.weekday === now.getDay()).sort((a, b) => a.startTime.localeCompare(b.startTime));
   const openTasks = db.tasks.filter((t) => !t.done).length;
+  const pendingRewards = db.reward_requests.filter((r) => r.status === 'pending').length;
   const birthday = upcomingBirthdays(members, db.birthdays, now, 1)[0];
 
   const quick: [string, string, string, () => void][] = [
     ['🥪', 'כריכים למחר', `יום ${WEEKDAYS[tomorrowDate.getDay()]} · ${sandwichesTomorrow} מתוך ${kids.length}`, () => go('menu')],
-    ['🍝', 'מה אוכלים', 'התפריט השבועי', () => go('menu')],
+    ['📣', 'הודעה למסך', 'קופצת במסך בבית', () => go('msg')],
     ['✅', 'משימה חדשה', `${openTasks} פתוחות`, () => setAddingTask(true)],
     ['🛒', 'רשימת קניות', `${db.shopping_items.filter((i) => !i.done).length} פריטים`, () => go('shop')],
   ];
@@ -51,6 +52,13 @@ export function HomeScreen({ go }: ScreenProps) {
         <div className="mb-3.5 flex items-center gap-2.5 rounded-2xl bg-[#fff4d6] px-3.5 py-3 text-[15px] font-semibold">
           🥪 חסרים {kids.length - sandwichesTomorrow} כריכים למחר
           <button className="ms-auto whitespace-nowrap font-bold text-accent" onClick={() => go('menu')}>להשלים</button>
+        </div>
+      )}
+
+      {pendingRewards > 0 && (
+        <div className="mb-3.5 flex items-center gap-2.5 rounded-2xl bg-[#fff4d6] px-3.5 py-3 text-[15px] font-semibold">
+          🎁 {pendingRewards === 1 ? 'בקשת פרס אחת ממתינה' : `${pendingRewards} בקשות פרס ממתינות`}
+          <button className="ms-auto whitespace-nowrap font-bold text-accent" onClick={() => go('rewards')}>לצפייה</button>
         </div>
       )}
 

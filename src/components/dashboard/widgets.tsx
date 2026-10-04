@@ -5,7 +5,7 @@ import { EVENT_COLOR } from '../../lib/calendar';
 import { formatMinutes, type UpcomingBirthday } from '../../lib/dates';
 import type { WeatherKind } from '../../types';
 
-const WEATHER_ICON: Record<WeatherKind, LucideIcon> = { clear: Sun, clouds: Cloud, rain: CloudRain, fog: CloudFog, snow: Snowflake };
+export const WEATHER_ICON: Record<WeatherKind, LucideIcon> = { clear: Sun, clouds: Cloud, rain: CloudRain, fog: CloudFog, snow: Snowflake };
 
 interface CardProps {
   title: ReactNode;
@@ -258,6 +258,24 @@ export function TasksCard({ model, style }: { model: DashboardModel; style?: CSS
           </>
         ) : <TaskList rows={tasks} />}
       </div>
+    </div>
+  );
+}
+
+/** הודעה מה-Admin או ממסך של ילד. קופצת בתחתית המסך ונעלמת כשתוקפה פג. */
+export function MessageBanner({ model }: { model: DashboardModel }) {
+  const { message } = model;
+  if (!message) return null;
+  // פס הזמן רץ מהרגע שההודעה נשלחה, גם אם המסך נטען באמצע
+  const bar = message.totalSec === null ? { display: 'none' } : { animation: `msgbar ${message.totalSec}s linear -${Math.min(message.elapsedSec, message.totalSec)}s 1 both` };
+  return (
+    <div className="msg" key={message.id} role="status">
+      <span className="msg-e">📣</span>
+      <div>
+        <b>{message.text}</b>
+        <small>{message.sender ? `${message.sender} · ` : ''}נשלח ב-{message.sentAt}</small>
+      </div>
+      <i className="msg-bar" style={bar} />
     </div>
   );
 }

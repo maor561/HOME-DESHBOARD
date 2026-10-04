@@ -1,6 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { geocodeCity, updateSettings } from '../../services/mutations';
+import { DEFAULT_ROUTINE, FAMILY_ID } from '../../data/seed';
+import { geocodeCity, uid, updateSettings } from '../../services/mutations';
 import { store } from '../../services/store';
 import type { PairedDevice, SupabaseStore } from '../../services/supabaseStore';
 import type { DashboardStyle, WidgetKey } from '../../types';
@@ -28,6 +29,43 @@ function StylePreview({ style }: { style: DashboardStyle }) {
       <i className="absolute inset-[48px_30%_8px_34%] -rotate-2 bg-[#dcebf7] shadow" />
       <i className="absolute inset-[44px_72%_8px_8px] rotate-2 bg-[#fff3a8] shadow" />
       <i className="absolute inset-[8px_68%_46px_10px] -rotate-3 bg-white shadow" />
+    </div>
+  );
+}
+
+/** ההכנות של כל ילד לשגרת הערב. לכל ילד רשימה משלו. */
+function RoutineEditor() {
+  const { db, members } = useFamily();
+  const kids = members.filter((m) => m.getsSandwich || db.routine_items.some((item) => item.memberId === m.id));
+  const [kidId, setKidId] = useState(kids[0]?.id ?? '');
+  const [text, setText] = useState('');
+  const items = db.routine_items.filter((item) => item.memberId === kidId).sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const add = async (value: string, order = items.length) => {
+    if (!value.trim() || !kidId) return;
+    await store.upsert('routine_items', { id: uid(), familyId: FAMILY_ID, memberId: kidId, text: value.trim(), sortOrder: order });
+  };
+
+  return (
+    <div className="py-2.5">
+      <Picker label="ההכנות של" value={kidId} options={kids.map((m) => [m.id, m.name])} onChange={setKidId} />
+      <div className="mt-2 divide-y divide-line">
+        {items.map((item) => (
+          <div key={item.id} className="flex min-h-[46px] items-center gap-2 py-1">
+            <b className="flex-1">{item.text}</b>
+            <IconButton label={`הסרת ${item.text}`} danger onClick={() => store.remove('routine_items', item.id)}><Trash2 className="size-5" /></IconButton>
+          </div>
+        ))}
+      </div>
+      {!items.length && (
+        <Button variant="ghost" wide className="mt-1 h-11 text-sm" onClick={async () => { for (const [i, value] of DEFAULT_ROUTINE.entries()) await add(value, i); }}>
+          להתחיל מרשימה מוכנה
+        </Button>
+      )}
+      <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); void add(text).then(() => setText('')); }}>
+        <TextInput value={text} placeholder="הכנה נוספת" aria-label="הכנה נוספת" onChange={(e) => setText(e.target.value)} />
+        <Button className="h-[46px] px-3.5 text-sm" disabled={!text.trim()}>הוספה</Button>
+      </form>
     </div>
   );
 }
@@ -127,6 +165,37 @@ export function SettingsScreen({ go }: ScreenProps) {
             options={['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((letter, i) => [i, letter])}
             onChange={(day) => save({ morning: { ...settings.morning, days: settings.morning.days.includes(day) ? settings.morning.days.filter((d) => d !== day) : [...settings.morning.days, day].sort() } })}
           />
+        </div>
+      </Panel>
+
+      <Panel title="מצב ערב · מתכוננים למחר">
+        <div className="flex items-center gap-3 py-2.5">
+          <span className="flex-1"><b className="block">רשימת הכנות לכל ילד</b><small className="text-sm text-soft">המסך חוזר לרגיל כשכולם מוכנים</small></span>
+          <Toggle label="מצב ערב" checked={settings.evening.enabled} onChange={(enabled) => save({ evening: { ...settings.evening, enabled } })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 py-2.5">
+          <label className="text-[13px] font-bold text-soft">מתחיל ב-<TextInput type="time" className="mt-1.5" value={settings.evening.from} onChange={(e) => save({ evening: { ...settings.evening, from: e.target.value } })} /></label>
+          <label className="text-[13px] font-bold text-soft">עד<TextInput type="time" className="mt-1.5" value={settings.evening.to} onChange={(e) => save({ evening: { ...settings.evening, to: e.target.value } })} /></label>
+        </div>
+        <div className="pb-2.5">
+          <Picker
+            label="בערבים"
+            value={settings.evening.days}
+            options={['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((letter, i) => [i, letter])}
+            onChange={(day) => save({ evening: { ...settings.evening, days: settings.evening.days.includes(day) ? settings.evening.days.filter((d) => d !== day) : [...settings.evening.days, day].sort() } })}
+          />
+        </div>
+        <RoutineEditor />
+      </Panel>
+
+      <Panel title="סיכום שבועי">
+        <div className="flex items-center gap-3 py-2.5">
+          <span className="flex-1"><b className="block">"השבוע שלנו" בשבת</b><small className="text-sm text-soft">כוכבים, משימות ומה מחכה בשבוע הבא</small></span>
+          <Toggle label="סיכום שבועי" checked={settings.summary.enabled} onChange={(enabled) => save({ summary: { ...settings.summary, enabled } })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 py-2.5">
+          <label className="text-[13px] font-bold text-soft">מוצג מ-<TextInput type="time" className="mt-1.5" value={settings.summary.from} onChange={(e) => save({ summary: { ...settings.summary, from: e.target.value } })} /></label>
+          <label className="text-[13px] font-bold text-soft">עד<TextInput type="time" className="mt-1.5" value={settings.summary.to} onChange={(e) => save({ summary: { ...settings.summary, to: e.target.value } })} /></label>
         </div>
       </Panel>
 

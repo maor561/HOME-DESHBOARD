@@ -3,6 +3,9 @@ import type { Database, Meal, WidgetKey } from '../types';
 
 export const FAMILY_ID = 'cohen';
 
+/** רשימת הכנות התחלתית לערב; כל ילד מקבל עותק שאפשר לשנות */
+export const DEFAULT_ROUTINE = ['תיק מוכן', 'בגדים למחר', 'מקלחת', 'צחצוח שיניים'];
+
 export const WIDGETS: WidgetKey[] = ['weather', 'sun', 'calendar', 'sandwiches', 'meals', 'activities', 'tasks', 'birthdays', 'photos', 'quote'];
 
 /**
@@ -75,6 +78,14 @@ export function createSeed(today = new Date()): Database {
     events: [],
     shopping_items: [],
     meal_requests: [],
+    routine_items: kids.flatMap((memberId) =>
+      DEFAULT_ROUTINE.map((text, sortOrder) => ({ id: `routine-${memberId}-${sortOrder}`, familyId: FAMILY_ID, memberId, text, sortOrder })),
+    ),
+    routine_checks: [],
+    rewards: [],
+    reward_requests: [],
+    messages: [],
+    star_log: [],
     settings: [
       {
         id: FAMILY_ID,
@@ -90,6 +101,9 @@ export function createSeed(today = new Date()): Database {
         widgets: WIDGETS.map((key) => ({ key, visible: true })),
         calendar: { holidays: true, funDays: true, shabbat: true, hidden: [] },
         morning: { enabled: true, from: '06:30', leave: '07:40', days: [0, 1, 2, 3, 4, 5] },
+        evening: { enabled: true, from: '18:00', to: '20:30', days: [0, 1, 2, 3, 4, 6] },
+        summary: { enabled: true, weekday: 6, from: '17:00', to: '18:00' },
+        kidsCanMessage: true,
         photoIntervalSec: 30,
         photoShuffle: true,
         pin: '1234',

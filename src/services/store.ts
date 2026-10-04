@@ -20,15 +20,17 @@ export interface DataStore {
   reset(): Promise<void>;
 }
 
-export const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'settings'];
+export const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'routine_items', 'routine_checks', 'rewards', 'reward_requests', 'messages', 'star_log', 'settings'];
 
 export const LOCAL_STORAGE_KEY = 'cohen-dashboard-db-v1';
 const CHANNEL = 'cohen-dashboard-sync';
 
 /** משלים שדות וטבלאות שנוספו אחרי שהנתונים נשמרו, כדי שגרסה חדשה תעבוד על נתונים ישנים. */
-export function normalize(db: Partial<Database>): Database {
+export function normalize(db: Partial<Database>, seedMissingTables = true): Database {
   const seed = createSeed();
-  const full = { ...seed, ...db } as Database;
+  // טבלה שחסרה בנתונים ישנים: במצב מקומי מקבלת את נתוני הפתיחה, בענן נשארת ריקה
+  const empty = Object.fromEntries(TABLES.map((t) => [t, []])) as unknown as Database;
+  const full = { ...(seedMissingTables ? seed : empty), ...db } as Database;
   return {
     ...full,
     // שדות שנוספו בגרסאות מאוחרות מקבלים ברירת מחדל בנתונים ישנים

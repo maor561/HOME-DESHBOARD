@@ -43,7 +43,39 @@ export interface MorningKid {
   task: string;
 }
 
+export interface EveningKid {
+  member: FamilyMember;
+  items: { id: string; text: string; done: boolean }[];
+  ready: boolean;
+  sandwich: string;
+  bring: string;
+}
+
+export interface SummaryKid {
+  member: FamilyMember;
+  stars: number;
+  done: number;
+  total: number;
+  top: boolean;
+}
+
 export interface DashboardModel {
+  /** "מתכוננים למחר": רשימת הכנות לכל ילד, בערבים ובשעות שבהגדרות, עד שכולם מוכנים */
+  evening: {
+    active: boolean;
+    kids: EveningKid[];
+    doneCount: number;
+    totalCount: number;
+    tomorrowLabel: string;
+    tomorrowWeather: { kind: WeatherKind; max: number } | null;
+    tip: string;
+    highlight: string;
+    activities: string;
+  };
+  /** "השבוע שלנו": סיכום שבועי ביום ובשעות שבהגדרות */
+  summary: { active: boolean; kids: SummaryKid[]; was: { label: string; title: string }[]; next: { label: string; title: string }[] };
+  /** ההודעה שמוצגת כרגע על המסך, אם יש */
+  message: { id: string; text: string; sender: string; sentAt: string; totalSec: number | null; elapsedSec: number } | null;
   /** יום הולדת שחל היום: שמות החוגגים והגיל (כשיש חוגג אחד וגילו ידוע) */
   celebration: { names: string; age: number | null } | null;
   /** פריטים פתוחים ברשימת הקניות */
@@ -102,7 +134,8 @@ export function useDashboard(): DashboardModel {
   const settings = db.settings[0];
   const liveWeather = useWeather(settings);
   const weekStart = displayedWeekStart(effectiveNow(realNow).now);
-  const holidays = useHolidays(toISODate(weekStart), toISODate(addDays(weekStart, 6)), settings);
+  // שבועיים: השבוע המוצג, והשבוע שאחריו (לסיכום השבועי)
+  const holidays = useHolidays(toISODate(weekStart), toISODate(addDays(weekStart, 13)), settings);
 
   return useMemo(() => {
     const { now, preview } = effectiveNow(realNow);
@@ -133,7 +166,8 @@ export function useDashboard(): DashboardModel {
     const { morning } = settings;
     const from = timeToMinutes(morning.from);
     const leave = timeToMinutes(morning.leave);
-    const forced = new URLSearchParams(window.location.search).get('mode') === 'morning';
+    const forcedMode = new URLSearchParams(window.location.search).get('mode');
+    const forced = forcedMode === 'morning';
     const morningActive = forced || (morning.enabled && morning.days.includes(now.getDay()) && minutes >= from && minutes < leave + 10);
     const tip =
       weather.kind === 'rain' ? '☔ יורד גשם: מעיל ומטרייה'
@@ -142,6 +176,54 @@ export function useDashboard(): DashboardModel {
       : weather.temp <= 22 ? '🧶 קריר: כדאי סוודר'
       : '🧢 חם היום: כובע ובקבוק מים';
     const todayActivities = dayActivities(now.getDay());
+
+    // מצב ערב: ילד מופיע רק אם הוגדרו לו הכנות
+    const { evening } = settings;
+    const tomorrowActivities = dayActivities(tomorrowDate.getDay());
+    const eveningKids: EveningKid[] = members
+      .map((member) => {
+        const items = db.routine_items
+          .filter((item) => item.memberId === member.id)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((item) => ({ id: item.id, text: item.text, done: db.routine_checks.some((c) => c.itemId === item.id && c.date === today) }));
+        return {
+          member,
+          items,
+          ready: items.length > 0 && items.every((item) => item.done),
+          sandwich: db.meals.find((m) => m.date === tomorrow && m.kind === 'sandwich' && m.memberId === member.id)?.text ?? '',
+          bring: [...new Set(tomorrowActivities.filter((a) => a.memberId === member.id).map((a) => a.bring).filter(Boolean))].join(', '),
+        };
+      })
+      .filter((kid) => kid.items.length > 0);
+    const inEveningWindow = evening.enabled && evening.days.includes(now.getDay()) && minutes >= timeToMinutes(evening.from) && minutes < timeToMinutes(evening.to);
+    const eveningActive = eveningKids.length > 0 && (forcedMode === 'evening' || (inEveningWindow && !eveningKids.every((kid) => kid.ready)));
+    const tomorrowForecast = weather.forecast.find((f) => f.date === tomorrow) ?? null;
+    const eveningTip = !tomorrowForecast ? ''
+      : tomorrowForecast.kind === 'rain' ? '☔ מחר גשם: להכין מעיל ומטרייה'
+      : tomorrowForecast.kind === 'snow' ? '🧤 מחר שלג: מעיל, כובע וכפפות'
+      : tomorrowForecast.max <= 18 ? '🧥 מחר קר: להכין מעיל'
+      : tomorrowForecast.max <= 24 ? '🧶 מחר נעים: שכבה קלה'
+      : '🧢 מחר חם: כובע ובקבוק מים';
+
+    // סיכום שבועי: כוכבים ומשימות מתחילת השבוע (יום ראשון)
+    const { summary } = settings;
+    const weekFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const weekEnd = toISODate(addDays(weekFrom, 6));
+    const thisWeekLog = db.star_log.filter((entry) => entry.kind === 'task' && new Date(entry.createdAt) >= weekFrom);
+    const summaryStats = members
+      .filter((m) => m.getsSandwich || m.hasDevice || thisWeekLog.some((entry) => entry.memberId === m.id))
+      .map((member) => {
+        const mine = thisWeekLog.filter((entry) => entry.memberId === member.id);
+        const done = mine.filter((entry) => entry.amount > 0).length - mine.filter((entry) => entry.amount < 0).length;
+        const open = db.tasks.filter((t) => t.memberId === member.id && !t.done && t.dueDate !== null && t.dueDate <= weekEnd).length;
+        return { member, stars: mine.reduce((sum, entry) => sum + entry.amount, 0), done: Math.max(0, done), total: Math.max(0, done) + open };
+      });
+    const bestStars = Math.max(0, ...summaryStats.map((k) => k.stars));
+    const summaryActive = forcedMode === 'summary' || (summary.enabled && now.getDay() === summary.weekday && minutes >= timeToMinutes(summary.from) && minutes < timeToMinutes(summary.to));
+
+    // הודעה למסך: האחרונה שעוד בתוקף
+    const nowIso = now.toISOString();
+    const liveMessage = [...db.messages].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find((m) => m.expiresAt === null || m.expiresAt > nowIso) ?? null;
     const morningKids: MorningKid[] = members.filter((m) => m.getsSandwich).map((member) => {
       const mine = todayActivities.filter((a) => a.memberId === member.id);
       const task = db.tasks.find((t) => t.memberId === member.id && !t.done && (!t.dueDate || t.dueDate <= today));
@@ -161,6 +243,37 @@ export function useDashboard(): DashboardModel {
       dateText: formatLongDate(now),
       minutes,
       dim: preview.minutes === null && isNightDim(settings, minutes),
+      evening: {
+        active: eveningActive,
+        kids: eveningKids,
+        doneCount: eveningKids.reduce((sum, kid) => sum + kid.items.filter((item) => item.done).length, 0),
+        totalCount: eveningKids.reduce((sum, kid) => sum + kid.items.length, 0),
+        tomorrowLabel: `יום ${WEEKDAYS[tomorrowDate.getDay()]}`,
+        tomorrowWeather: tomorrowForecast ? { kind: tomorrowForecast.kind, max: tomorrowForecast.max } : null,
+        tip: eveningTip,
+        highlight: eventsOn(tomorrow, calendarSources).filter((e) => e.kind !== 'shabbat')[0]?.title ?? '',
+        activities: tomorrowActivities.map((a) => `${memberById.get(a.memberId)?.name ?? ''} ${a.startTime} ${a.title}`).join(' · '),
+      },
+      summary: {
+        active: summaryActive,
+        kids: summaryStats.map((k) => ({ ...k, top: bestStars > 0 && k.stars === bestStars })),
+        was: buildWeek(now, calendarSources, false, weekFrom)
+          .filter((day) => day.offset <= 0)
+          .flatMap((day) => day.events.filter((e) => e.kind !== 'shabbat').map((e) => ({ label: day.name, title: e.title })))
+          .slice(-4),
+        next: [
+          ...buildWeek(now, calendarSources, false, addDays(weekFrom, 7)).flatMap((day) => day.events.map((e) => ({ label: day.name, title: e.title }))).slice(0, 3),
+          ...upcomingBirthdays(members, db.birthdays, now, 1).filter((b) => b.days > 0).map((b) => ({ label: `בעוד ${b.days} ימים`, title: `🎂 יום ההולדת של ${b.name}` })),
+        ],
+      },
+      message: liveMessage && {
+        id: liveMessage.id,
+        text: liveMessage.text,
+        sender: liveMessage.sender,
+        sentAt: formatMinutes(minutesOf(new Date(liveMessage.createdAt))),
+        totalSec: liveMessage.expiresAt ? Math.round((new Date(liveMessage.expiresAt).getTime() - new Date(liveMessage.createdAt).getTime()) / 1000) : null,
+        elapsedSec: Math.max(0, Math.round((now.getTime() - new Date(liveMessage.createdAt).getTime()) / 1000)),
+      },
       celebration: birthdaysToday.length
         ? { names: birthdaysToday.map((b) => b.name).join(' ו'), age: birthdaysToday.length === 1 ? birthdaysToday[0].age : null }
         : null,

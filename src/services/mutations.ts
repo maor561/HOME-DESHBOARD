@@ -1,6 +1,6 @@
 import { FAMILY_ID } from '../data/seed';
 import { addDays, toISODate } from '../lib/dates';
-import type { Database, FamilyMember, ID, ISODate, MealKind, MealRequest, Settings, ShoppingItem, Task } from '../types';
+import type { Database, FamilyMember, ID, ISODate, MealKind, MealRequest, Reward, RewardRequest, RoutineItem, Settings, ShoppingItem, StarLog, Task } from '../types';
 import { store } from './store';
 import type { SupabaseStore } from './supabaseStore';
 
@@ -39,7 +39,51 @@ export async function toggleTask(task: Task): Promise<void> {
   const done = !task.done;
   await store.upsert('tasks', { ...task, done, completedAt: done ? new Date().toISOString() : null });
   const member = store.getSnapshot().family_members.find((m) => m.id === task.memberId);
-  if (member && task.stars) await store.upsert('family_members', { ...member, stars: Math.max(0, member.stars + (done ? task.stars : -task.stars)) });
+  if (member && task.stars) await addStars(member, done ? task.stars : -task.stars, 'task');
+}
+
+/** שינוי במספר הכוכבים של בן משפחה, עם רישום ביומן (שממנו נבנה הסיכום השבועי). */
+export async function addStars(member: FamilyMember, amount: number, kind: StarLog['kind']): Promise<void> {
+  await store.upsert('family_members', { ...member, stars: Math.max(0, member.stars + amount) });
+  await store.upsert('star_log', { id: uid(), familyId: FAMILY_ID, memberId: member.id, amount, kind, createdAt: new Date().toISOString() });
+}
+
+/* ---------- שגרת ערב ---------- */
+
+export const routineCheckId = (item: RoutineItem, date: ISODate): ID => `${date}-${item.id}`;
+
+/** סימון או ביטול של הכנה בתאריך מסוים. */
+export function toggleRoutine(item: RoutineItem, date: ISODate): Promise<void> {
+  const id = routineCheckId(item, date);
+  const exists = store.getSnapshot().routine_checks.some((c) => c.id === id);
+  return exists ? store.remove('routine_checks', id) : store.upsert('routine_checks', { id, familyId: FAMILY_ID, itemId: item.id, memberId: item.memberId, date });
+}
+
+/* ---------- פרסים ---------- */
+
+/** תשובה לבקשת פרס. באישור הכוכבים יורדים מהחשבון של הילד. */
+export async function answerRewardRequest(request: RewardRequest, approve: boolean): Promise<void> {
+  const member = store.getSnapshot().family_members.find((m) => m.id === request.memberId);
+  if (approve && member) await addStars(member, -request.cost, 'reward');
+  await store.upsert('reward_requests', { ...request, status: approve ? 'approved' : 'declined' });
+}
+
+/* ---------- הודעות למסך ---------- */
+
+/** הודעה שמוצגת מיד במסך בבית. minutes = null משאיר אותה עד שמסירים. */
+export function sendMessage(text: string, sender: string, minutes: number | null): Promise<void> {
+  const now = Date.now();
+  return store.upsert('messages', {
+    id: uid(), familyId: FAMILY_ID, text: text.trim(), sender,
+    createdAt: new Date(now).toISOString(),
+    expiresAt: minutes === null ? null : new Date(now + minutes * 60_000).toISOString(),
+  });
+}
+
+/** מוחק הודעות שתוקפן פג, כדי שהטבלה לא תגדל. נקרא ממסך ההודעות ב-Admin. */
+export async function pruneMessages(db: Database): Promise<void> {
+  const now = new Date().toISOString();
+  for (const message of db.messages.filter((m) => m.expiresAt !== null && m.expiresAt < now)) await store.remove('messages', message.id);
 }
 
 /* ---------- רשימת קניות ---------- */
@@ -148,6 +192,21 @@ export function kidToggleTask(task: Task): Promise<void> {
 
 export function kidAddShopping(text: string, memberId: ID): Promise<void> {
   return kidAction('kid_add_shopping', { p_id: uid(), p_text: text.trim() }, () => addShoppingItem(text, memberId));
+}
+
+export function kidToggleRoutine(item: RoutineItem, date: ISODate): Promise<void> {
+  return kidAction('kid_toggle_routine', { p_item: item.id, p_date: date }, () => toggleRoutine(item, date));
+}
+
+export function kidRequestReward(member: FamilyMember, reward: Reward): Promise<void> {
+  const id = uid();
+  return kidAction('kid_request_reward', { p_id: id, p_reward: reward.id }, () =>
+    store.upsert('reward_requests', { id, familyId: FAMILY_ID, memberId: member.id, rewardId: reward.id, title: reward.title, cost: reward.cost, status: 'pending', createdAt: new Date().toISOString() }),
+  );
+}
+
+export function kidSendMessage(member: FamilyMember, text: string): Promise<void> {
+  return kidAction('kid_send_message', { p_id: uid(), p_text: text.trim() }, () => sendMessage(text, member.name, 15));
 }
 
 export function kidRequestSandwich(memberId: ID, date: ISODate, text: string): Promise<void> {

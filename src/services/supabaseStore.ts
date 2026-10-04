@@ -24,7 +24,7 @@ const url = env.VITE_SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = env.VITE_SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export const cloudConfig: CloudConfig | null = url && anonKey ? { url, anonKey } : null;
 
-const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'settings'];
+const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'routine_items', 'routine_checks', 'rewards', 'reward_requests', 'messages', 'star_log', 'settings'];
 const CACHE_KEY = 'cohen-dashboard-cloud-cache-v1';
 const PHOTO_BUCKET = 'photos';
 /** רשת ביטחון בלבד: העדכונים השוטפים מגיעים ב-Realtime, בחיבור אחד פתוח ובלי בקשות חוזרות */
@@ -32,7 +32,7 @@ const REFRESH_MS = 15 * 60_000;
 /** לא טוענים מחדש יותר מפעם בדקה כשחוזרים ללשונית */
 const MIN_RELOAD_GAP_MS = 60_000;
 
-const EMPTY: Database = { families: [], family_members: [], birthdays: [], activities: [], meals: [], tasks: [], daily_quotes: [], photos: [], events: [], shopping_items: [], meal_requests: [], settings: [] };
+const EMPTY: Database = { families: [], family_members: [], birthdays: [], activities: [], meals: [], tasks: [], daily_quotes: [], photos: [], events: [], shopping_items: [], meal_requests: [], routine_items: [], routine_checks: [], rewards: [], reward_requests: [], messages: [], star_log: [], settings: [] };
 
 type Json = Record<string, unknown>;
 const snake = (key: string) => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
@@ -227,7 +227,7 @@ export class SupabaseStore implements DataStore {
     });
     const loaded = next as unknown as Database;
     // ענן ריק נשאר ריק (כדי שיוצע להעלות נתונים); אחרת משלימים שדות חסרים
-    this.commit(loaded.settings.length ? normalize(loaded) : loaded);
+    this.commit(loaded.settings.length ? normalize(loaded, false) : loaded);
   }
 
   /** עדכון של שורה אחת בתמונת המצב המקומית: row להוספה/עדכון, או removeId למחיקה. */

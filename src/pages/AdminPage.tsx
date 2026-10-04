@@ -4,7 +4,9 @@ import { ActivitiesScreen } from '../components/admin/ActivitiesScreen';
 import { CalendarScreen } from '../components/admin/CalendarScreen';
 import { HomeScreen } from '../components/admin/HomeScreen';
 import { MenuScreen } from '../components/admin/MenuScreen';
+import { MessagesScreen } from '../components/admin/MessagesScreen';
 import { BirthdaysScreen, FamilyScreen, MoreScreen, PhotosScreen, QuotesScreen } from '../components/admin/MoreScreens';
+import { RewardsScreen } from '../components/admin/RewardsScreen';
 import { SettingsScreen } from '../components/admin/SettingsScreen';
 import { ShoppingScreen } from '../components/admin/ShoppingScreen';
 import { TasksScreen } from '../components/admin/TasksScreen';
@@ -115,6 +117,8 @@ function AdminShell({ onLock }: { onLock: () => void }) {
               {screen === 'acts' && <ActivitiesScreen />}
               {screen === 'tasks' && <TasksScreen />}
               {screen === 'more' && <MoreScreen go={go} onLock={onLock} />}
+              {screen === 'msg' && <MessagesScreen />}
+              {screen === 'rewards' && <RewardsScreen go={go} />}
               {screen === 'shop' && <ShoppingScreen />}
               {screen === 'cal' && <CalendarScreen go={go} />}
               {screen === 'family' && <FamilyScreen go={go} />}

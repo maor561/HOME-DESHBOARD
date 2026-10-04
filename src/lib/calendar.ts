@@ -82,8 +82,7 @@ export function eventsOn(date: ISODate, sources: CalendarSources, includeHidden 
 }
 
 /** שבעת ימי השבוע המוצג, מראשון עד שבת. */
-export function buildWeek(now: Date, sources: CalendarSources, includeHidden = false): CalendarDay[] {
-  const start = displayedWeekStart(now);
+export function buildWeek(now: Date, sources: CalendarSources, includeHidden = false, start = displayedWeekStart(now)): CalendarDay[] {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Array.from({ length: 7 }, (_, i) => {
     const day = addDays(start, i);

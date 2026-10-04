@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>משפחת כהן · סקיצה v2 · המסך של הילד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f0e6; --card: #fffdf9; --ink: #1f2a3d; --soft: #6d7686; --faint: #b3b9c2; --line: #ebe2d3; --c: #e2607a; --c-soft: #fde3e8; --ok: #2f9e7a; --r: 22px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #1b1d27; }
+  body { font: 500 16px/1.4 'Assistant', system-ui, sans-serif; color: var(--ink); }
+  button, input { font: inherit; color: inherit; } button { cursor: pointer; border: 0; background: none; }
+  .phone { position: relative; max-width: 430px; height: 100dvh; margin: 0 auto; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+  .screen { flex: 1; overflow-y: auto; padding: 0 16px 20px; }
+  .who { display: flex; gap: 6px; padding: 8px 12px; background: #101320; }
+  .who span { color: #7d85a3; font: 600 13px 'Assistant'; align-self: center; margin-inline-end: 4px; }
+  .who button { font: 600 13px 'Assistant'; color: #c9cede; background: #1b2033; border: 1px solid #2c3350; border-radius: 8px; padding: 5px 11px; }
+  .who button[aria-pressed="true"] { background: #ffbd66; border-color: #ffbd66; color: #1a1208; }
+
+  .hero { margin: 0 -16px 14px; padding: 22px 20px 20px; color: #fff; border-radius: 0 0 30px 30px;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--c) 78%, #1a1040), var(--c) 55%, color-mix(in srgb, var(--c) 60%, #ffcf8a)); }
+  .hero .top { display: flex; align-items: center; gap: 12px; }
+  .hero .av { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.25); display: grid; place-items: center; font: 700 26px 'Frank Ruhl Libre', serif; border: 2px solid rgba(255,255,255,.6); }
+  .hero h1 { font: 700 30px/1.1 'Frank Ruhl Libre', serif; } .hero p { opacity: .9; font-weight: 600; }
+  .stars { margin-inline-start: auto; background: rgba(0,0,0,.22); border-radius: 99px; padding: 6px 14px; font-weight: 800; font-size: 18px; white-space: nowrap; }
+  .next { margin-top: 16px; background: rgba(255,255,255,.2); border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .next .e { font-size: 30px; } .next small { display: block; opacity: .9; font-weight: 700; font-size: 13px; } .next b { font-size: 19px; }
+
+  h2 { font: 800 13px 'Assistant'; letter-spacing: .1em; color: var(--soft); margin: 18px 4px 9px; display: flex; align-items: center; gap: 7px; }
+  h2::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+  h2 small { margin-inline-start: auto; font-size: 13px; letter-spacing: 0; color: var(--c); font-weight: 700; }
+  .card { background: var(--card); border-radius: var(--r); padding: 6px 16px; box-shadow: 0 1px 0 var(--line), 0 8px 22px rgba(60,40,10,.05); }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 0; min-height: 60px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .e { width: 44px; height: 44px; border-radius: 14px; background: var(--c-soft); display: grid; place-items: center; font-size: 22px; flex: none; }
+  .row .main { flex: 1; min-width: 0; } .row .main small { display: block; font-size: 13px; font-weight: 700; color: var(--soft); } .row .main b { display: block; font-size: 17px; line-height: 1.25; }
+  .row .side { font-size: 14px; font-weight: 700; color: var(--c); white-space: nowrap; }
+  .check { width: 34px; height: 34px; border-radius: 12px; border: 2.5px solid var(--faint); display: grid; place-items: center; flex: none; color: transparent; font-size: 20px; transition: all .2s; }
+  .done .check { background: var(--ok); border-color: var(--ok); color: #fff; } .done .main b { text-decoration: line-through; color: var(--faint); }
+  .bar { height: 10px; border-radius: 9px; background: var(--line); overflow: hidden; margin: 2px 4px 10px; } .bar i { display: block; height: 100%; background: var(--c); border-radius: 9px; transition: width .4s; }
+  .btn { height: 48px; border-radius: 16px; background: var(--c); color: #fff; font-weight: 800; padding: 0 18px; width: 100%; margin-top: 10px; }
+  .btn.ghost { background: var(--c-soft); color: var(--c); }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .week div { background: var(--card); border-radius: 14px; padding: 8px 2px; text-align: center; font-weight: 700; font-size: 14px; min-height: 76px; box-shadow: 0 1px 0 var(--line); }
+  .week div.today { background: var(--ink); color: #fff; } .week small { display: block; font-size: 11px; opacity: .65; } .week span { display: block; font-size: 18px; margin-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; } .chips button { height: 44px; padding: 0 14px; border-radius: 14px; background: var(--card); font-weight: 700; box-shadow: 0 1px 0 var(--line); border: 2px solid transparent; }
+  .chips button[aria-pressed="true"] { border-color: var(--c); background: var(--c-soft); }
+  .note { font-size: 14px; color: var(--soft); padding: 8px 4px 0; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--card); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .tabs button { height: 58px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--soft); }
+  .tabs button span { font-size: 22px; line-height: 1.1; } .tabs button[aria-current="page"] { background: var(--c-soft); color: var(--c); }
+  .toast { position: absolute; bottom: 86px; inset-inline: 16px; background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-weight: 700; text-align: center; z-index: 9; }
+
+  .goal { margin-top: 16px; background: rgba(255,255,255,.2); border-radius: 18px; padding: 12px 14px; }
+  .goal small { display: block; font-weight: 700; font-size: 13px; opacity: .9; } .goal b { font-size: 19px; }
+  .goal .bar { background: rgba(255,255,255,.35); margin: 8px 0 0; } .goal .bar i { background: #fff; }
+  .prize { display: flex; align-items: center; gap: 12px; padding: 12px 0; min-height: 64px; }
+  .prize + .prize { border-top: 1px solid var(--line); }
+  .prize .e { width: 48px; height: 48px; border-radius: 16px; background: var(--c-soft); display: grid; place-items: center; font-size: 26px; flex: none; }
+  .prize .main { flex: 1; min-width: 0; } .prize .main b { display: block; font-size: 17px; } .prize .main small { display: block; font-size: 13px; font-weight: 700; color: var(--soft); }
+  .prize button { height: 40px; padding: 0 14px; border-radius: 13px; background: var(--c); color: #fff; font-weight: 800; white-space: nowrap; }
+  .prize button[disabled] { background: var(--line); color: var(--soft); }
+  .prize .wait { font-size: 13px; font-weight: 800; color: var(--c); white-space: nowrap; }
+  .eve { background: linear-gradient(150deg, #1b2650, #3a2f6b); color: #fff; border-radius: var(--r); padding: 14px 16px 8px; margin-bottom: 4px; }
+  .eve h3 { font: 700 21px 'Frank Ruhl Libre', serif; display: flex; align-items: center; gap: 8px; }
+  .eve h3 span { margin-inline-start: auto; font: 800 15px 'Assistant'; background: rgba(255,255,255,.2); border-radius: 99px; padding: 3px 12px; }
+  .eve .row { border-color: rgba(255,255,255,.18) !important; min-height: 54px; padding: 9px 0; }
+  .eve .check { border-color: rgba(255,255,255,.6); } .eve .done .main b { color: rgba(255,255,255,.5); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="who" role="toolbar" aria-label="פקדי הסקיצה"><span>סקיצה · הטלפון של:</span><button data-kid="alma">אלמה</button><button data-kid="gaya">גאיה</button><button data-eve="1" id="evebtn">מצב ערב</button></div>
+  <main class="screen" id="screen"></main>
+  <nav class="tabs" id="tabs" aria-label="ניווט"></nav>
+</div>
+<script>
+// נתוני דוגמה בלבד
+const KIDS = {
+  alma: { name: 'אלמה', c: '#e2607a', soft: '#fde3e8', stars: 12, sand: 'פיתה עם חומוס ומלפפון', sandTomorrow: 'כריך טונה', bring: 'בגדי התעמלות, חליל',
+    act: { e: '🤸', t: 'התעמלות קרקע', time: '16:00–17:15', place: 'מרכז הספורט' },
+    tasks: [['להכין תיק לבית הספר', 1, false], ['לסדר את החדר', 2, false], ['לקרוא 20 דקות', 1, true]], week: ['🤸', '', '🎹', '', '', '', ''] },
+  gaya: { name: 'גאיה', c: '#8a63d2', soft: '#ece2f8', stars: 9, sand: 'לחמנייה עם גבינה צהובה', sandTomorrow: 'פיתה עם שוקולד', bring: 'ספר מהספרייה',
+    act: { e: '🎨', t: 'ציור', time: '16:30–17:30', place: 'המתנ״ס' },
+    tasks: [['להאכיל את החתול', 1, true], ['להכין תיק לבית הספר', 1, false]], week: ['', '🎨', '', '', '🎨', '', ''] },
+};
+const DAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const S = { kid: 'alma', tab: 'today', toast: '', pick: 0, eve: false };
+const ROUTINE = [['תיק מוכן', true], ['בגדים למחר', true], ['מקלחת', false], ['צחצוח שיניים', false]];
+const PRIZES = [['🍦', 'גלידה', 10], ['🎬', 'ערב סרט לבחירתי', 20], ['🎳', 'באולינג עם אבא', 40]];
+const $ = id => document.getElementById(id);
+
+const TABS = {
+  today: k => `
+    <div class="hero"><div class="top"><span class="av">${k.name[0]}</span><div><h1>היי ${k.name}!</h1><p>יום ראשון, 4 באוקטובר</p></div><span class="stars">⭐ ${k.stars}</span></div>
+      <div class="next"><span class="e">${k.act.e}</span><div><small>הדבר הבא שלך</small><b>${k.act.t} ב-${k.act.time.slice(0, 5)}</b></div></div></div>
+    ${S.eve ? `<h2>ערב · מתכוננים למחר</h2><div class="eve"><h3>🌙 מוכנה למחר? <span>${ROUTINE.filter(r => r[1]).length}/${ROUTINE.length}</span></h3>
+      ${ROUTINE.map((r, i) => `<div class="row ${r[1] ? 'done' : ''}"><button class="check" data-rt="${i}" aria-label="סימון">✓</button><span class="main"><b>${r[0]}</b></span></div>`).join('')}</div>` : ''}
+    <h2>היום שלי</h2>
+    <div class="card">
+      <div class="row"><span class="e">🥪</span><span class="main"><small>הכריך שלי</small><b>${k.sand}</b></span></div>
+      <div class="row"><span class="e">🎒</span><span class="main"><small>להביא היום</small><b>${k.bring}</b></span></div>
+      <div class="row"><span class="e">${k.act.e}</span><span class="main"><small>חוג · ${k.act.time}</small><b>${k.act.t}</b></span><span class="side">${k.act.place}</span></div>
+      <div class="row"><span class="e">🍝</span><span class="main"><small>צהריים · ערב</small><b>שניצל, אורז וסלט · פסטה ברוטב עגבניות</b></span></div>
+    </div>
+    <h2>המשימות שלי להיום<small>${k.tasks.filter(t => t[2]).length} מתוך ${k.tasks.length}</small></h2>
+    <div class="bar"><i style="width:${Math.round(k.tasks.filter(t => t[2]).length / k.tasks.length * 100)}%"></i></div>
+    <div class="card">${taskRows(k)}</div>`,
+  tasks: k => `
+    <div class="hero"><div class="top"><span class="av">⭐</span><div><h1>${k.stars} כוכבים</h1><p>השבוע אספת 7</p></div></div>
+      ${(() => { const next = PRIZES.find(p => p[2] > k.stars) ?? PRIZES[PRIZES.length - 1]; return `<div class="goal"><small>הפרס הבא</small><b>${next[0]} ${next[1]} · עוד ${Math.max(0, next[2] - k.stars)} כוכבים</b><div class="bar"><i style="width:${Math.min(100, Math.round(k.stars / next[2] * 100))}%"></i></div></div>`; })()}</div>
+    <h2>הפרסים</h2><div class="card">${PRIZES.map((p, i) => `<div class="prize"><span class="e">${p[0]}</span><span class="main"><b>${p[1]}</b><small>⭐ ${p[2]}</small></span>
+      ${S.asked === i ? '<span class="wait">ממתין לאישור</span>' : `<button data-prize="${i}" ${k.stars >= p[2] ? '' : 'disabled'}>${k.stars >= p[2] ? 'אני רוצה!' : 'עוד ' + (p[2] - k.stars)}</button>`}</div>`).join('')}</div>
+    <h2>היום</h2><div class="card">${taskRows(k)}</div>
+    <h2>השבוע</h2><div class="card">
+      <div class="row"><span class="e">🗑️</span><span class="main"><small>יום שלישי · ⭐ 2</small><b>להוריד את הפח</b></span></div>
+      <div class="row"><span class="e">🧺</span><span class="main"><small>יום חמישי · ⭐ 2</small><b>לקפל כביסה</b></span></div></div>
+    <p class="note">כשמבקשים פרס, ההורים מאשרים, ואז הכוכבים יורדים מהחשבון.</p>`,
+  week: k => `
+    <div class="hero"><div class="top"><span class="av">🗓</span><div><h1>השבוע שלי</h1><p>4.10–10.10</p></div></div></div>
+    <h2>החוגים שלי</h2><div class="week">${DAYS.map((d, i) => `<div class="${i ? '' : 'today'}">${d}<small>${4 + i}.10</small><span>${k.week[i]}</span></div>`).join('')}</div>
+    <h2>מה קורה בבית</h2><div class="card">
+      <div class="row"><span class="e">🐾</span><span class="main"><small>היום</small><b>יום בעלי החיים</b></span></div>
+      <div class="row"><span class="e">🍎</span><span class="main"><small>מחר</small><b>יום המורה</b></span></div>
+      <div class="row"><span class="e">🕯️</span><span class="main"><small>שישי</small><b>כניסת שבת 17:54</b></span></div>
+      <div class="row"><span class="e">🎂</span><span class="main"><small>בעוד 25 ימים</small><b>יום ההולדת של נרי</b></span></div></div>`,
+  ask: k => `
+    <div class="hero"><div class="top"><span class="av">💬</span><div><h1>בקשות</h1><p>ההורים מקבלים ומאשרים</p></div></div></div>
+    <h2>הכריך שלי למחר<small>${k.sandTomorrow}</small></h2>
+    <div class="chips">${[k.sandTomorrow, 'פיתה עם חומוס', 'טוסט גבינה צהובה', 'לחמנייה עם חביתה', 'משהו אחר…'].map((t, i) => `<button aria-pressed="${i === S.pick}" data-pick="${i}">${t}</button>`).join('')}</div>
+    <button class="btn" data-toast="הבקשה נשלחה להורים">שליחת בקשה</button>
+    <h2>הודעה למסך בבית</h2>
+    <div class="chips">${['אני בדרך הביתה', 'מי בא לשחק?', 'סיימתי שיעורים!'].map(t => `<button data-toast="ההודעה מוצגת במסך">${t}</button>`).join('')}</div>
+    <div class="card" style="margin-top:10px"><div class="row"><input style="flex:1;height:46px;border:1.5px solid var(--line);border-radius:14px;padding:0 13px;font-weight:600" placeholder="או לכתוב הודעה"><button class="side" data-toast="ההודעה מוצגת במסך">שליחה</button></div></div>
+    <h2>להוסיף לרשימת הקניות</h2>
+    <div class="card"><div class="row"><input style="flex:1;height:46px;border:1.5px solid var(--line);border-radius:14px;padding:0 13px;font-weight:600" placeholder="מה חסר לי?"><button class="side" data-toast="נוסף לרשימת הקניות">הוספה</button></div></div>
+    <p class="note">בקשה לכריך מופיעה אצל ההורים בתפריט השבועי. פריט לקניות נכנס ישר לרשימה, עם השם שלך.</p>`,
+};
+function taskRows(k) {
+  return k.tasks.map((t, i) => `<div class="row ${t[2] ? 'done' : ''}"><button class="check" data-task="${i}" aria-label="סימון">✓</button><span class="main"><b>${t[0]}</b></span><span class="side">⭐ ${t[1]}</span></div>`).join('');
+}
+function render() {
+  const k = KIDS[S.kid];
+  document.documentElement.style.setProperty('--c', k.c);
+  document.documentElement.style.setProperty('--c-soft', k.soft);
+  $('screen').innerHTML = TABS[S.tab](k) + (S.toast ? `<div class="toast" role="status">${S.toast}</div>` : '');
+  $('tabs').innerHTML = [['today', '☀️', 'היום'], ['tasks', '⭐', 'משימות'], ['week', '🗓', 'השבוע'], ['ask', '💬', 'בקשות']]
+    .map(([t, e, n]) => `<button data-tab="${t}" ${t === S.tab ? 'aria-current="page"' : ''}><span>${e}</span>${n}</button>`).join('');
+  document.getElementById('evebtn').setAttribute('aria-pressed', String(S.eve));
+  document.querySelectorAll('[data-kid]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kid === S.kid)));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset, k = KIDS[S.kid];
+  if (d.kid) S.kid = d.kid;
+  if (d.tab) { S.tab = d.tab; $('screen').scrollTop = 0; }
+  if (d.pick !== undefined) S.pick = +d.pick;
+  if (d.rt !== undefined) ROUTINE[d.rt][1] = !ROUTINE[d.rt][1];
+  if (d.prize !== undefined) { S.asked = +d.prize; S.toast = 'הבקשה נשלחה להורים'; clearTimeout(window.tt); window.tt = setTimeout(() => { S.toast = ''; render(); }, 1800); }
+  if (d.eve !== undefined) S.eve = !S.eve;
+  if (d.task !== undefined) { const t = k.tasks[d.task]; t[2] = !t[2]; k.stars += t[2] ? t[1] : -t[1]; }
+  if (d.toast) { S.toast = d.toast; clearTimeout(window.tt); window.tt = setTimeout(() => { S.toast = ''; render(); }, 1800); }
+  render();
+});
+render();
+</script>
+</body>
+</html>

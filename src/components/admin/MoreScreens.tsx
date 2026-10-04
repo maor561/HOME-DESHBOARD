@@ -13,10 +13,13 @@ const Swatch = ({ color }: { color: string }) => <span className="block size-5 r
 
 export function MoreScreen({ go, onLock }: ScreenProps & { onLock: () => void }) {
   const { db } = useFamily();
+  const pendingRewards = db.reward_requests.filter((r) => r.status === 'pending').length;
   return (
     <>
       <ScreenHeader title="עוד" />
       <Panel>
+        <LinkRow icon="📣" title="הודעה למסך" subtitle="קופצת במסך בבית לזמן מוגבל" onClick={() => go('msg')} />
+        <LinkRow icon="🎁" title="כוכבים ופרסים" subtitle={`${db.rewards.length} פרסים${pendingRewards ? ` · ${pendingRewards} בקשות ממתינות` : ''}`} onClick={() => go('rewards')} />
         <LinkRow icon="🛒" title="רשימת קניות" subtitle={`${db.shopping_items.filter((i) => !i.done).length} פריטים`} onClick={() => go('shop')} />
         <LinkRow icon="🗓️" title="לוח שנה" subtitle="חגים, חופשות, ימים מיוחדים ואירועים" onClick={() => go('cal')} />
         <LinkRow icon="👨‍👩‍👧‍👦" title="משפחה" subtitle={`${db.family_members.length} בני משפחה`} onClick={() => go('family')} />
