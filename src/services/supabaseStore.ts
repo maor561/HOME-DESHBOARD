@@ -57,6 +57,8 @@ export class SupabaseStore implements DataStore {
   private db: Database = EMPTY;
   private listeners = new Set<() => void>();
   private lastReload = 0;
+  private userId: string | null = null;
+  private listenTurn = 0;
 
   constructor(config: CloudConfig) {
     this.client = createClient(config.url, config.anonKey);
@@ -70,14 +72,18 @@ export class SupabaseStore implements DataStore {
       // מטמון פגום: ממשיכים לטעינה מהענן
     }
     await this.reload().catch((error) => console.warn('טעינת הנתונים מהענן נכשלה, מוצג המטמון', error));
-    this.listen();
+    this.userId = (await this.getSession())?.user.id ?? null;
+    void this.listen();
 
-    // כניסה או יציאה משנות את ההרשאות: מתחברים מחדש לעדכונים וטוענים שוב
-    this.client.auth.onAuthStateChange((event) => {
-      if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
+    // כשהמשתמש מתחלף (כניסה, יציאה, אישור מסך) ההרשאות משתנות: מתחברים מחדש לעדכונים וטוענים שוב.
+    // Supabase שולח אירוע SIGNED_IN גם בכל חזרה ללשונית ובכל חידוש אסימון; אלה לא משנים דבר, ולכן מתעלמים מהם.
+    this.client.auth.onAuthStateChange((_event, session) => {
+      const userId = session?.user.id ?? null;
+      if (userId === this.userId) return;
+      this.userId = userId;
       // setTimeout: אסור לקרוא ל-Supabase מתוך ה-callback עצמו
       window.setTimeout(() => {
-        this.listen();
+        void this.listen();
         void this.reload().catch(() => {});
       }, 0);
     });
@@ -126,8 +132,11 @@ export class SupabaseStore implements DataStore {
   }
 
   /** האזנה לשינויים בזמן אמת. נקראת מחדש כשהמשתמש מתחלף, כדי שההרשאות החדשות יחולו. */
-  private listen(): void {
-    void this.client.removeAllChannels();
+  private async listen(): Promise<void> {
+    const turn = ++this.listenTurn;
+    // חייבים לחכות לסגירה: אחרת הסגירה של הערוץ הישן מנתקת גם את הערוץ החדש
+    await this.client.removeAllChannels();
+    if (turn !== this.listenTurn) return;
     this.client
       .channel('cohen-db')
       .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {

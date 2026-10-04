@@ -126,24 +126,32 @@ export async function answerMealRequest(request: MealRequest, approve: boolean):
  */
 const cloud = () => (store.mode === 'cloud' ? (store as SupabaseStore) : null);
 
-async function rpc(name: string, args: Record<string, unknown>): Promise<void> {
-  const { error } = await cloud()!.client.rpc(name, args);
-  if (error) throw new Error(error.message);
-  await cloud()!.reload();
+/**
+ * מריץ פעולת ילד. direct היא הכתיבה הרגילה, שמשמשת במצב מקומי וגם כשהורה מחובר
+ * צופה במסך של ילד: הורה אינו "מכשיר ילד", אבל יש לו הרשאת כתיבה משלו.
+ */
+async function kidAction(name: string, args: Record<string, unknown>, direct: () => Promise<void>): Promise<void> {
+  const store_ = cloud();
+  if (!store_) return direct();
+  const { error } = await store_.client.rpc(name, args);
+  if (!error) return store_.reload();
+  if (/not a kid device/i.test(error.message)) return direct();
+  throw new Error(error.message);
 }
 
 export function kidToggleTask(task: Task): Promise<void> {
-  return cloud() ? rpc('kid_toggle_task', { p_task: task.id }) : toggleTask(task);
+  return kidAction('kid_toggle_task', { p_task: task.id }, () => toggleTask(task));
 }
 
 export function kidAddShopping(text: string, memberId: ID): Promise<void> {
-  return cloud() ? rpc('kid_add_shopping', { p_id: uid(), p_text: text.trim() }) : addShoppingItem(text, memberId);
+  return kidAction('kid_add_shopping', { p_id: uid(), p_text: text.trim() }, () => addShoppingItem(text, memberId));
 }
 
 export function kidRequestSandwich(memberId: ID, date: ISODate, text: string): Promise<void> {
   const id = `${date}-${memberId}`;
-  if (cloud()) return rpc('kid_request_sandwich', { p_id: id, p_date: date, p_text: text.trim() });
-  return store.upsert('meal_requests', { id, familyId: FAMILY_ID, memberId, date, text: text.trim(), status: 'pending', createdAt: new Date().toISOString() });
+  return kidAction('kid_request_sandwich', { p_id: id, p_date: date, p_text: text.trim() }, () =>
+    store.upsert('meal_requests', { id, familyId: FAMILY_ID, memberId, date, text: text.trim(), status: 'pending', createdAt: new Date().toISOString() }),
+  );
 }
 
 const STEP: Record<Exclude<Task['repeat'], 'none'>, (d: Date) => Date> = {

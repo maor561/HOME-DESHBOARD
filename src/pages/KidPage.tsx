@@ -68,7 +68,7 @@ function Info({ icon, label, value, side }: { icon: string; label: string; value
 }
 
 function TaskRow({ task, label }: { task: Task; label?: string }) {
-  const toggle = () => kidToggleTask(task).catch(() => toast('לא הצלחתי לשמור, נסו שוב'));
+  const toggle = () => kidToggleTask(task).catch((error: Error) => toast(`לא הצלחתי לשמור: ${error.message}`));
   return (
     <div className="flex min-h-[60px] items-center gap-3 py-3">
       <button role="checkbox" aria-checked={task.done} aria-label={`סימון: ${task.title}`} onClick={toggle}
@@ -209,11 +209,11 @@ function AskTab({ member, db, tomorrow, planned }: { member: FamilyMember; db: D
   const STATUS = { pending: 'ממתין לתשובה מההורים', approved: 'אושר ✅', declined: 'לא הפעם' };
 
   const send = () =>
-    kidRequestSandwich(member.id, tomorrow, choice).then(() => { setChoice(''); toast('הבקשה נשלחה להורים'); }).catch(() => toast('לא הצלחתי לשלוח, נסו שוב'));
+    kidRequestSandwich(member.id, tomorrow, choice).then(() => { setChoice(''); toast('הבקשה נשלחה להורים'); }).catch((error: Error) => toast(`לא הצלחתי לשלוח: ${error.message}`));
   const addItem = (event: FormEvent) => {
     event.preventDefault();
     if (!item.trim()) return;
-    kidAddShopping(item, member.id).then(() => { setItem(''); toast('נוסף לרשימת הקניות'); }).catch(() => toast('לא הצלחתי להוסיף, נסו שוב'));
+    kidAddShopping(item, member.id).then(() => { setItem(''); toast('נוסף לרשימת הקניות'); }).catch((error: Error) => toast(`לא הצלחתי להוסיף: ${error.message}`));
   };
 
   return (
