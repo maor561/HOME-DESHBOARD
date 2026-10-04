@@ -249,4 +249,20 @@ svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width
 .s-board .row .main { display: block; } .s-board .meal b { font-size: 1.08em; }
 
 
+/* ===== לוח המקרר על רקע שמיים חיים: כל הרקע משתנה לפי השעה ומזג האוויר ===== */
+.s-board { background: none; }
+/* הטקסט שעל השמיים (שעון, תאריך, מזג אוויר) מחליף צבע לפי בהירות השמיים; הפתקים נשארים נייר */
+.stage[data-scheme="dark"] .s-board .wall { --ink: #fdf8ef; --soft: rgba(253,248,239,.76); --faint: rgba(253,248,239,.4); --line: rgba(255,255,255,.2); --accent: #ffbd66; text-shadow: 0 .05em .6em rgba(0,0,0,.28); }
+.stage[data-scheme="light"] .s-board .wall { --ink: #12233d; --soft: rgba(18,35,61,.74); --faint: rgba(18,35,61,.38); --line: rgba(18,35,61,.16); --accent: #c2501c; }
+.s-board .wallwx { margin: 0; align-self: center; justify-content: center; }
+.s-board .wallwx .wx-now { flex-wrap: wrap; gap: .1em .7em; }
+.s-board .wallwx .wx-now > .ic { font-size: 4.4em; }
+.s-board .wallwx .wx-temp { font-size: 4.8em; font-weight: 700; }
+.s-board .wallwx .wx-meta { flex-basis: 100%; font-size: .98em; font-family: 'Assistant', sans-serif; }
+/* בלילה הנייר מעומעם מעט, כדי לא לסנוור על רקע כהה */
+.stage[data-phase="night"] .s-board .card, .stage[data-phase="night"] .s-board .polaroid { filter: brightness(.84); }
+/* השמש והירח כאן הם הילה רכה ולא עיגול חד, כדי שלא יפריעו לקריאת השעון כשהם עוברים מאחוריו */
+.s-board .orb { width: calc(var(--u) * 11); height: calc(var(--u) * 11); filter: blur(calc(var(--u) * 1.1)); opacity: .7; }
+.s-board .orb.moon { width: calc(var(--u) * 7); height: calc(var(--u) * 7); opacity: .3; }
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }

@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { SkyBackdrop } from '../components/dashboard/SkyBackdrop';
 import {
-  ActivityList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, TaskList, WeekStrip, WindowWeather, sandwichTitle,
+  ActivityList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, TaskList, WeatherNow, WeekStrip, sandwichTitle,
 } from '../components/dashboard/widgets';
 import type { DashboardModel } from '../hooks/useDashboard';
 
@@ -9,23 +9,17 @@ import type { DashboardModel } from '../hooks/useDashboard';
 const note = (rotate: string, paper: string) => ({ '--r': rotate, '--p': paper }) as CSSProperties;
 
 /**
- * סגנון "לוח המקרר": למעלה חלון (שרואים דרכו את מזג האוויר), שעון ופולארויד;
- * באמצע שלושה פתקים; למטה לוח השנה השבועי.
+ * סגנון "לוח המקרר": פתקים ופולארויד על רקע שמיים שמשתנים לפי השעה ומזג האוויר.
+ * למעלה מזג האוויר, שעון ותמונה; באמצע שלושה פתקים; למטה לוח השנה השבועי.
  */
 export function BoardLayout({ model }: { model: DashboardModel }) {
   const { show } = model;
   return (
     <section className="sty s-board on">
-      <div className="layer lamp" />
+      <SkyBackdrop weather={model.weather.kind} orb={model.orb} />
       <div className="ui">
         <div className="top">
-          <div className="winbox">
-            <div className="win">
-              <SkyBackdrop weather={model.weather.kind} orb={model.orb} />
-              {show('weather') && <WindowWeather model={model} />}
-            </div>
-            <div className="sill" />
-          </div>
+          <div className="wall wallwx">{show('weather') && <WeatherNow model={model} />}</div>
           <div className="head wall"><Heading model={model} /></div>
           {show('photos') ? (
             <div className="polaroid">

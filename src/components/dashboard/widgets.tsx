@@ -61,11 +61,6 @@ export function WeatherNow({ model }: { model: DashboardModel }) {
   );
 }
 
-/** הטמפרטורה הנוכחית, כתובה על זכוכית החלון בסגנון "לוח המקרר". */
-export function WindowWeather({ model }: { model: DashboardModel }) {
-  return <div className="winwx"><b>{model.weather.temp}°</b>{model.weather.text}</div>;
-}
-
 /**
  * לוח השנה השבועי, מראשון עד שבת: תאריך, תחזית ואירועים לכל יום.
  * בכל תא יש מקום לשני אירועים; כשיש יותר, הרשימה גוללת לאט למעלה ולמטה.
