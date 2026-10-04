@@ -70,8 +70,9 @@ export function eventsOn(date: ISODate, sources: CalendarSources, includeHidden 
   sources.events
     .filter((e) => e.kind === 'fun' && occursOn(e, date))
     .forEach((e) => list.push({ key: e.id, title: `${e.icon} ${e.title}`, kind: 'fun', auto: false }));
-  const funDay = settings.calendar.funDays ? FUN_DAYS[date.slice(5)] : undefined;
-  if (funDay) list.push({ key: `fun:${date.slice(5)}`, title: funDay, kind: 'fun', auto: true });
+  if (settings.calendar.funDays) {
+    FUN_DAYS.filter(([day]) => day === date.slice(5)).forEach(([day, title]) => list.push({ key: `fun:${day}:${title}`, title, kind: 'fun', auto: true }));
+  }
 
   return includeHidden ? list : list.filter((e) => !hidden.has(e.key));
 }
