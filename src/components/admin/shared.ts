@@ -3,7 +3,7 @@ import { useDatabase } from '../../hooks/useDatabase';
 import { addDays } from '../../lib/dates';
 import type { Database, FamilyMember, Settings } from '../../types';
 
-export type Screen = 'home' | 'menu' | 'acts' | 'tasks' | 'more' | 'cal' | 'family' | 'bdays' | 'quotes' | 'photos' | 'settings';
+export type Screen = 'home' | 'menu' | 'acts' | 'tasks' | 'more' | 'shop' | 'cal' | 'family' | 'bdays' | 'quotes' | 'photos' | 'settings';
 
 export interface ScreenProps {
   go: (screen: Screen) => void;

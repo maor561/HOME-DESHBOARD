@@ -3,7 +3,7 @@ import type { Holiday } from '../services/holidays';
 import type { Birthday, CalendarEvent, FamilyMember, ISODate, Settings } from '../types';
 import { WEEKDAYS, addDays, minutesOf, toISODate } from './dates';
 
-export type DayEventKind = 'holiday' | 'vacation' | 'fun' | 'family' | 'birthday';
+export type DayEventKind = 'holiday' | 'shabbat' | 'vacation' | 'fun' | 'family' | 'birthday';
 
 export interface DayEvent {
   /** מזהה יציב: לאירוע אוטומטי משמש להסתרה, לאירוע של המשפחה זה מזהה השורה */
@@ -31,8 +31,8 @@ export interface CalendarSources {
   settings: Settings;
 }
 
-export const EVENT_COLOR: Record<DayEventKind, string> = { holiday: '#c98a1a', vacation: '#2f9e7a', fun: '#d9567f', family: '#3f8fdc', birthday: '#8a63d2' };
-export const EVENT_LABEL: Record<DayEventKind, string> = { holiday: 'חג', vacation: 'חופשה', fun: 'יום מיוחד', family: 'שלנו', birthday: 'יום הולדת' };
+export const EVENT_COLOR: Record<DayEventKind, string> = { shabbat: '#5b6bb5', holiday: '#c98a1a', vacation: '#2f9e7a', fun: '#d9567f', family: '#3f8fdc', birthday: '#8a63d2' };
+export const EVENT_LABEL: Record<DayEventKind, string> = { shabbat: 'שבת', holiday: 'חג', vacation: 'חופשה', fun: 'יום מיוחד', family: 'שלנו', birthday: 'יום הולדת' };
 
 /** שעת המעבר לשבוע הבא ביום שבת */
 const WEEK_SWITCH_MINUTES = 18 * 60;
@@ -54,8 +54,12 @@ export function eventsOn(date: ISODate, sources: CalendarSources, includeHidden 
   const hidden = new Set(settings.calendar.hidden);
   const list: DayEvent[] = [];
 
+  const today = sources.holidays.filter((h) => h.date === date);
   if (settings.calendar.holidays) {
-    sources.holidays.filter((h) => h.date === date).forEach((h) => list.push({ key: `holiday:${date}:${h.title}`, title: h.title, kind: 'holiday', auto: true }));
+    today.filter((h) => h.kind === 'holiday').forEach((h) => list.push({ key: `holiday:${date}:${h.title}`, title: h.title, kind: 'holiday', auto: true }));
+  }
+  if (settings.calendar.shabbat) {
+    today.filter((h) => h.kind !== 'holiday').forEach((h) => list.push({ key: `shabbat:${date}:${h.kind}`, title: h.title, kind: 'shabbat', auto: true }));
   }
   sources.events
     .filter((e) => e.kind === 'vacation' && occursOn(e, date))

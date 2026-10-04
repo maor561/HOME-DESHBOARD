@@ -21,7 +21,7 @@ export function ActivitiesScreen() {
     setDraft(
       activity
         ? { ...activity, weekdays: [activity.weekday], isNew: false }
-        : { id: uid(), familyId: FAMILY_ID, memberId: members.find((m) => m.getsSandwich)?.id ?? members[0].id, title: '', weekdays: [new Date().getDay()], startTime: '16:00', endTime: '17:00', place: '', icon: ACTIVITY_ICONS[0], isNew: true },
+        : { id: uid(), familyId: FAMILY_ID, memberId: members.find((m) => m.getsSandwich)?.id ?? members[0].id, title: '', weekdays: [new Date().getDay()], startTime: '16:00', endTime: '17:00', place: '', bring: '', icon: ACTIVITY_ICONS[0], isNew: true },
     );
 
   const save = async () => {
@@ -85,6 +85,8 @@ export function ActivitiesScreen() {
           </div>
           <SheetLabel>מקום</SheetLabel>
           <TextInput value={draft.place} placeholder="למשל: מרכז הספורט" onChange={(e) => setDraft({ ...draft, place: e.target.value })} />
+          <SheetLabel>מה להביא (מופיע במסך הבוקר)</SheetLabel>
+          <TextInput value={draft.bring} placeholder="למשל: בגדי התעמלות, בקבוק מים" onChange={(e) => setDraft({ ...draft, bring: e.target.value })} />
           <Picker label="אייקון" value={draft.icon} options={ACTIVITY_ICONS.map((icon) => [icon, icon])} onChange={(icon) => setDraft({ ...draft, icon })} />
           <SheetActions onCancel={() => setDraft(null)} onSave={save} disabled={!draft.title.trim() || !draft.weekdays.length} onDelete={draft.isNew ? undefined : remove} />
         </Sheet>

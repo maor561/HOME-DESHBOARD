@@ -32,18 +32,18 @@ export function createSeed(today = new Date()): Database {
 
   const weekday = today.getDay();
   const activity = (id: string, memberId: string, icon: string, title: string, day: number, startTime: string, endTime: string, place: string) => ({
-    id, familyId: FAMILY_ID, memberId, icon, title, weekday: day, startTime, endTime, place,
+    id, familyId: FAMILY_ID, memberId, icon, title, weekday: day, startTime, endTime, place, bring: '',
   });
 
   return {
     families: [{ id: FAMILY_ID, name: 'משפחת כהן' }],
     family_members: [
-      { id: 'maor', familyId: FAMILY_ID, name: 'מאור', birthDate: '1984-09-15', color: '#2f9e7a', icon: null, getsSandwich: false, sortOrder: 0 },
-      { id: 'nofar', familyId: FAMILY_ID, name: 'נופר', birthDate: '1991-08-14', color: '#0f9aa8', icon: null, getsSandwich: false, sortOrder: 1 },
-      { id: 'alma', familyId: FAMILY_ID, name: 'אלמה', birthDate: '2015-06-01', color: '#e2607a', icon: null, getsSandwich: true, sortOrder: 2 },
-      { id: 'gaya', familyId: FAMILY_ID, name: 'גאיה', birthDate: '2017-09-30', color: '#8a63d2', icon: null, getsSandwich: true, sortOrder: 3 },
-      { id: 'eylon', familyId: FAMILY_ID, name: 'אילון', birthDate: '2020-09-07', color: '#3f8fdc', icon: null, getsSandwich: true, sortOrder: 4 },
-      { id: 'neri', familyId: FAMILY_ID, name: 'נרי', birthDate: '2022-10-29', color: '#e08a1a', icon: null, getsSandwich: true, sortOrder: 5 },
+      { id: 'maor', familyId: FAMILY_ID, name: 'מאור', birthDate: '1984-09-15', color: '#2f9e7a', icon: null, getsSandwich: false, sortOrder: 0, hasDevice: false, stars: 0 },
+      { id: 'nofar', familyId: FAMILY_ID, name: 'נופר', birthDate: '1991-08-14', color: '#0f9aa8', icon: null, getsSandwich: false, sortOrder: 1, hasDevice: false, stars: 0 },
+      { id: 'alma', familyId: FAMILY_ID, name: 'אלמה', birthDate: '2015-06-01', color: '#e2607a', icon: null, getsSandwich: true, sortOrder: 2, hasDevice: false, stars: 0 },
+      { id: 'gaya', familyId: FAMILY_ID, name: 'גאיה', birthDate: '2017-09-30', color: '#8a63d2', icon: null, getsSandwich: true, sortOrder: 3, hasDevice: false, stars: 0 },
+      { id: 'eylon', familyId: FAMILY_ID, name: 'אילון', birthDate: '2020-09-07', color: '#3f8fdc', icon: null, getsSandwich: true, sortOrder: 4, hasDevice: false, stars: 0 },
+      { id: 'neri', familyId: FAMILY_ID, name: 'נרי', birthDate: '2022-10-29', color: '#e08a1a', icon: null, getsSandwich: true, sortOrder: 5, hasDevice: false, stars: 0 },
     ],
     birthdays: [
       { id: 'demo-grandma', familyId: FAMILY_ID, name: 'סבתא', birthDate: '1955-11-12', yearKnown: true, icon: '🎂', color: '#c98a3a' },
@@ -57,10 +57,10 @@ export function createSeed(today = new Date()): Database {
     ],
     meals,
     tasks: [
-      { id: 'demo-task-1', familyId: FAMILY_ID, title: 'לקנות חלב', done: true, completedAt: today.toISOString(), dueDate: toISODate(today), priority: 'normal', memberId: 'maor', repeat: 'none' },
-      { id: 'demo-task-2', familyId: FAMILY_ID, title: 'להכין תיקים לבית הספר', done: false, completedAt: null, dueDate: toISODate(today), priority: 'high', memberId: 'alma', repeat: 'daily' },
-      { id: 'demo-task-3', familyId: FAMILY_ID, title: 'לשלם חשבון חשמל', done: false, completedAt: null, dueDate: toISODate(addDays(today, 1)), priority: 'normal', memberId: 'nofar', repeat: 'none' },
-      { id: 'demo-task-4', familyId: FAMILY_ID, title: 'להזמין ניקיון', done: false, completedAt: null, dueDate: toISODate(addDays(today, 3)), priority: 'normal', memberId: null, repeat: 'none' },
+      { id: 'demo-task-1', familyId: FAMILY_ID, title: 'לקנות חלב', done: true, completedAt: today.toISOString(), dueDate: toISODate(today), priority: 'normal', memberId: 'maor', repeat: 'none', stars: 1 },
+      { id: 'demo-task-2', familyId: FAMILY_ID, title: 'להכין תיקים לבית הספר', done: false, completedAt: null, dueDate: toISODate(today), priority: 'high', memberId: 'alma', repeat: 'daily', stars: 1 },
+      { id: 'demo-task-3', familyId: FAMILY_ID, title: 'לשלם חשבון חשמל', done: false, completedAt: null, dueDate: toISODate(addDays(today, 1)), priority: 'normal', memberId: 'nofar', repeat: 'none', stars: 1 },
+      { id: 'demo-task-4', familyId: FAMILY_ID, title: 'להזמין ניקיון', done: false, completedAt: null, dueDate: toISODate(addDays(today, 3)), priority: 'normal', memberId: null, repeat: 'none', stars: 1 },
     ],
     daily_quotes: [
       'הדברים הגדולים מתחילים בצעדים קטנים.',
@@ -73,6 +73,8 @@ export function createSeed(today = new Date()): Database {
       id: `demo-photo-${seed}`, familyId: FAMILY_ID, url: `https://picsum.photos/seed/cohen-${seed}/1400/1000`, createdAt: today.toISOString(),
     })),
     events: [],
+    shopping_items: [],
+    meal_requests: [],
     settings: [
       {
         id: FAMILY_ID,
@@ -86,7 +88,8 @@ export function createSeed(today = new Date()): Database {
         textScale: 1,
         nightDim: { enabled: true, from: '22:30', to: '06:00' },
         widgets: WIDGETS.map((key) => ({ key, visible: true })),
-        calendar: { holidays: true, funDays: true, hidden: [] },
+        calendar: { holidays: true, funDays: true, shabbat: true, hidden: [] },
+        morning: { enabled: true, from: '06:30', leave: '07:40', days: [0, 1, 2, 3, 4, 5] },
         photoIntervalSec: 30,
         photoShuffle: true,
         pin: '1234',

@@ -4,7 +4,7 @@ import { geocodeCity, updateSettings } from '../../services/mutations';
 import { store } from '../../services/store';
 import type { PairedDevice, SupabaseStore } from '../../services/supabaseStore';
 import type { DashboardStyle, WidgetKey } from '../../types';
-import { Button, Field, IconButton, ListRow, Panel, ScreenHeader, Select, TextInput, Toggle, toast, useDraft } from '../ui';
+import { Button, Field, IconButton, ListRow, Panel, Picker, ScreenHeader, Select, TextInput, Toggle, toast, useDraft } from '../ui';
 import { useFamily, type ScreenProps } from './shared';
 
 const WIDGET_LABEL: Record<WidgetKey, string> = {
@@ -35,6 +35,7 @@ function StylePreview({ style }: { style: DashboardStyle }) {
 /** המסכים שחוברו בסריקת QR. הסרת מסך מנתקת אותו, והוא יציג שוב קוד לחיבור. */
 function PairedScreens() {
   const cloud = store as SupabaseStore;
+  const { db } = useFamily();
   const [devices, setDevices] = useState<PairedDevice[]>([]);
   const load = () => void cloud.listDevices().then(setDevices);
   useEffect(load, []);
@@ -43,7 +44,7 @@ function PairedScreens() {
     <Panel title="מסכים מחוברים">
       {!devices.length && <p className="py-3 text-sm text-soft">עוד לא חובר מסך. פותחים את ‎/dashboard במסך, וסורקים את הקוד שמופיע בו.</p>}
       {devices.map((device) => (
-        <ListRow key={device.userId} title={device.name} subtitle={`חובר ב-${new Date(device.createdAt).toLocaleDateString('he-IL')}`}>
+        <ListRow key={device.userId} title={device.memberId ? `המסך של ${db.family_members.find((m) => m.id === device.memberId)?.name ?? device.name}` : device.name} subtitle={`חובר ב-${new Date(device.createdAt).toLocaleDateString('he-IL')}`}>
           <IconButton label="ניתוק המסך" danger onClick={async () => { await cloud.removeDevice(device.userId); toast('המסך נותק'); load(); }}>
             <Trash2 className="size-5" />
           </IconButton>
@@ -108,6 +109,25 @@ export function SettingsScreen({ go }: ScreenProps) {
         <Field label="גודל טקסט" wide>
           <Select value={settings.textScale} onChange={(e) => save({ textScale: Number(e.target.value) })}><option value={1}>רגיל</option><option value={1.08}>גדול</option><option value={1.16}>גדול מאוד</option></Select>
         </Field>
+      </Panel>
+
+      <Panel title="מצב בוקר">
+        <div className="flex items-center gap-3 py-2.5">
+          <span className="flex-1"><b className="block">מסך יציאה מהבית</b><small className="text-sm text-soft">כריך, מה להביא וחוג לכל ילד</small></span>
+          <Toggle label="מצב בוקר" checked={settings.morning.enabled} onChange={(enabled) => save({ morning: { ...settings.morning, enabled } })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 py-2.5">
+          <label className="text-[13px] font-bold text-soft">מתחיל ב-<TextInput type="time" className="mt-1.5" value={settings.morning.from} onChange={(e) => save({ morning: { ...settings.morning, from: e.target.value } })} /></label>
+          <label className="text-[13px] font-bold text-soft">שעת יציאה<TextInput type="time" className="mt-1.5" value={settings.morning.leave} onChange={(e) => save({ morning: { ...settings.morning, leave: e.target.value } })} /></label>
+        </div>
+        <div className="pb-2.5">
+          <Picker
+            label="בימים"
+            value={settings.morning.days}
+            options={['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((letter, i) => [i, letter])}
+            onChange={(day) => save({ morning: { ...settings.morning, days: settings.morning.days.includes(day) ? settings.morning.days.filter((d) => d !== day) : [...settings.morning.days, day].sort() } })}
+          />
+        </div>
       </Panel>
 
       <Panel title="לילה מעומעם">

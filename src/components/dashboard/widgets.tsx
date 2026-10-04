@@ -1,5 +1,5 @@
 import { Check, Cloud, CloudFog, CloudRain, Droplet, Moon, Snowflake, Sun, Wind, type LucideIcon } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ActivityRow, DashboardModel, TaskRow } from '../../hooks/useDashboard';
 import { EVENT_COLOR } from '../../lib/calendar';
 import { formatMinutes, type UpcomingBirthday } from '../../lib/dates';
@@ -37,7 +37,11 @@ export function Clock({ value }: { value: string }) {
 export function Heading({ model }: { model: DashboardModel }) {
   return (
     <>
-      <div className="fam">{model.familyName}</div>
+      <div className="fam">
+        {model.celebration
+          ? `🎉 מזל טוב ${model.celebration.names}!${model.celebration.age === null ? '' : ` יום הולדת ${model.celebration.age}`}`
+          : model.familyName}
+      </div>
       <Clock value={model.clock} />
       <div className="date">{model.dateText}</div>
     </>
@@ -84,11 +88,12 @@ export function WeekStrip({ model, style }: { model: DashboardModel; style?: CSS
         <div className="label">{week.label} <em dir="ltr">{week.range}</em></div>
         {show('birthdays') && (
           <div className="bdl">
-            🎂{' '}
-            {birthdays.map((b, i) => (
-              <span key={b.id}>
-                {i > 0 && ' · '}
-                <b>{b.name}</b>{b.age === null ? '' : ` (גיל ${b.age})`} <i>{b.days === 0 ? 'היום!' : `בעוד ${b.days} ימים`}</i>
+            <span className="bdt">🎂 ימי הולדת קרובים</span>
+            {birthdays.map((b) => (
+              <span className="bdp" key={b.id}>
+                <b>{b.name}</b>
+                <i>{b.days === 0 ? 'היום!' : `בעוד ${b.days} ימים`}</i>
+                <small>{b.shortDate}{b.age === null ? '' : ` · גיל ${b.age}`}</small>
               </span>
             ))}
           </div>
@@ -217,6 +222,60 @@ export function TaskList({ rows }: { rows: TaskRow[] }) {
       ))}
     </div>
   );
+}
+
+const FLIP_MS = 12_000;
+const SHOPPING_VISIBLE = 6;
+
+/** כרטיס המשימות. כשיש פריטים ברשימת הקניות, הוא מתחלף איתה כל כמה שניות. */
+export function TasksCard({ model, style }: { model: DashboardModel; style?: CSSProperties }) {
+  const { shopping, tasks } = model;
+  const hasShopping = shopping.length > 0;
+  const [side, setSide] = useState(0);
+
+  useEffect(() => {
+    if (!hasShopping) return setSide(0);
+    const timer = window.setInterval(() => setSide((s) => 1 - s), FLIP_MS);
+    return () => window.clearInterval(timer);
+  }, [hasShopping]);
+
+  const showShopping = hasShopping && side === 1;
+  return (
+    <div className="card flip" style={style}>
+      <div className="label">
+        {showShopping ? '🛒 רשימת קניות' : 'משימות'}
+        {hasShopping && <span className="dots"><i className={showShopping ? '' : 'on'} /><i className={showShopping ? 'on' : ''} /></span>}
+      </div>
+      <div className="body" key={side}>
+        {showShopping ? (
+          <>
+            <div className="shop">
+              {shopping.slice(0, SHOPPING_VISIBLE).map((text, i) => (
+                <div className="task" key={i}><span className="box" /><b>{text}</b></div>
+              ))}
+            </div>
+            {shopping.length > SHOPPING_VISIBLE && <div className="more">ועוד {shopping.length - SHOPPING_VISIBLE} פריטים</div>}
+          </>
+        ) : <TaskList rows={tasks} />}
+      </div>
+    </div>
+  );
+}
+
+const CONFETTI_COLORS = ['#e2607a', '#ffbd66', '#3f8fdc', '#2f9e7a', '#8a63d2'];
+
+/** קונפטי ליום הולדת. מוצג רק ביום עצמו. */
+export function Confetti() {
+  const pieces = useMemo(
+    () => Array.from({ length: 46 }, (_, i) => ({
+      right: `${Math.random() * 100}%`,
+      background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      animationDuration: `${(5 + Math.random() * 5).toFixed(1)}s`,
+      animationDelay: `-${(Math.random() * 9).toFixed(1)}s`,
+    })),
+    [],
+  );
+  return <div className="layer confetti" aria-hidden="true">{pieces.map((style, i) => <i key={i} style={style} />)}</div>;
 }
 
 export function BirthdayList({ rows, className = '' }: { rows: UpcomingBirthday[]; className?: string }) {

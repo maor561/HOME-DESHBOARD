@@ -1,6 +1,6 @@
 import { SkyBackdrop } from '../components/dashboard/SkyBackdrop';
 import {
-  ActivityList, BirthdayList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, SunArc, TaskList, WeatherNow, WeekStrip, sandwichTitle,
+  ActivityList, BirthdayList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, SunArc, TasksCard, WeatherNow, WeekStrip, sandwichTitle,
 } from '../components/dashboard/widgets';
 import type { DashboardModel } from '../hooks/useDashboard';
 
@@ -36,7 +36,7 @@ export function GlassLayout({ model }: { model: DashboardModel }) {
           ) : (
             show('quote') && <div className="card grow" style={{ justifyContent: 'center' }}><Quote text={model.quote} /></div>
           )}
-          {show('tasks') && <Card title="משימות"><TaskList rows={model.tasks} /></Card>}
+          {show('tasks') && <TasksCard model={model} />}
           {/* בלי לוח השנה, ימי ההולדת חוזרים לכרטיס משלהם */}
           {!show('calendar') && show('birthdays') && <Card title="ימי הולדת קרובים"><BirthdayList rows={model.birthdays} /></Card>}
         </div>

@@ -6,6 +6,7 @@ import { HomeScreen } from '../components/admin/HomeScreen';
 import { MenuScreen } from '../components/admin/MenuScreen';
 import { BirthdaysScreen, FamilyScreen, MoreScreen, PhotosScreen, QuotesScreen } from '../components/admin/MoreScreens';
 import { SettingsScreen } from '../components/admin/SettingsScreen';
+import { ShoppingScreen } from '../components/admin/ShoppingScreen';
 import { TasksScreen } from '../components/admin/TasksScreen';
 import type { Screen } from '../components/admin/shared';
 import { Toaster } from '../components/ui';
@@ -114,6 +115,7 @@ function AdminShell({ onLock }: { onLock: () => void }) {
               {screen === 'acts' && <ActivitiesScreen />}
               {screen === 'tasks' && <TasksScreen />}
               {screen === 'more' && <MoreScreen go={go} onLock={onLock} />}
+              {screen === 'shop' && <ShoppingScreen />}
               {screen === 'cal' && <CalendarScreen go={go} />}
               {screen === 'family' && <FamilyScreen go={go} />}
               {screen === 'bdays' && <BirthdaysScreen go={go} />}

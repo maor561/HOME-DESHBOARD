@@ -7,9 +7,11 @@ export type Access = 'admin' | 'device' | 'none' | 'open';
 export interface PairedDevice {
   userId: string;
   name: string;
+  /** בן המשפחה שהמכשיר שייך לו; null למסך הבית */
+  memberId: string | null;
   createdAt: string;
 }
-import type { DataStore } from './store';
+import { normalize, type DataStore } from './store';
 
 export interface CloudConfig {
   url: string;
@@ -22,7 +24,7 @@ const url = env.VITE_SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = env.VITE_SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export const cloudConfig: CloudConfig | null = url && anonKey ? { url, anonKey } : null;
 
-const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'settings'];
+const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'settings'];
 const CACHE_KEY = 'cohen-dashboard-cloud-cache-v1';
 const PHOTO_BUCKET = 'photos';
 /** רשת ביטחון בלבד: העדכונים השוטפים מגיעים ב-Realtime, בחיבור אחד פתוח ובלי בקשות חוזרות */
@@ -30,7 +32,7 @@ const REFRESH_MS = 15 * 60_000;
 /** לא טוענים מחדש יותר מפעם בדקה כשחוזרים ללשונית */
 const MIN_RELOAD_GAP_MS = 60_000;
 
-const EMPTY: Database = { families: [], family_members: [], birthdays: [], activities: [], meals: [], tasks: [], daily_quotes: [], photos: [], events: [], settings: [] };
+const EMPTY: Database = { families: [], family_members: [], birthdays: [], activities: [], meals: [], tasks: [], daily_quotes: [], photos: [], events: [], shopping_items: [], meal_requests: [], settings: [] };
 
 type Json = Record<string, unknown>;
 const snake = (key: string) => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
@@ -162,16 +164,27 @@ export class SupabaseStore implements DataStore {
     return table === 'admins' ? 'admin' : 'device';
   }
 
-  async approveDevice(deviceUserId: string, name: string): Promise<void> {
+  async approveDevice(deviceUserId: string, name: string, memberId: string | null = null): Promise<void> {
     const session = await this.getSession();
-    const { error } = await this.client.from('devices').upsert({ user_id: deviceUserId, name, approved_by: session?.user.id });
+    const row: Json = { user_id: deviceUserId, name, approved_by: session?.user.id };
+    // העמודה קיימת רק אחרי סקריפט העדכון השלישי; למסך הבית לא שולחים אותה כלל
+    if (memberId) row.member_id = memberId;
+    const { error } = await this.client.from('devices').upsert(row);
     if (error) throw new Error(error.message);
   }
 
   async listDevices(): Promise<PairedDevice[]> {
-    const { data, error } = await this.client.from('devices').select('user_id, name, created_at').order('created_at');
+    const { data, error } = await this.client.from('devices').select('*').order('created_at');
     if (error) return [];
-    return (data as { user_id: string; name: string; created_at: string }[]).map((d) => ({ userId: d.user_id, name: d.name, createdAt: d.created_at }));
+    return (data as { user_id: string; name: string; member_id?: string | null; created_at: string }[]).map((d) => ({ userId: d.user_id, name: d.name, memberId: d.member_id ?? null, createdAt: d.created_at }));
+  }
+
+  /** בן המשפחה שהמכשיר הנוכחי מחובר בשמו, או null אם זה מסך הבית או שהמכשיר לא מחובר. */
+  async deviceMember(): Promise<string | null> {
+    const session = await this.getSession();
+    if (!session) return null;
+    const { data } = await this.client.from('devices').select('*').eq('user_id', session.user.id).limit(1);
+    return (data?.[0] as { member_id?: string | null } | undefined)?.member_id ?? null;
   }
 
   async removeDevice(deviceUserId: string): Promise<void> {
@@ -198,10 +211,14 @@ export class SupabaseStore implements DataStore {
     const results = await Promise.all(TABLES.map((table) => this.client.from(table).select('*')));
     const next = { ...EMPTY } as Record<TableName, unknown[]>;
     results.forEach(({ data, error }, i) => {
+      // טבלה שעוד לא נוצרה במסד הנתונים (לפני הרצת סקריפט העדכון) נחשבת ריקה
+      if (error && /does not exist|not find|schema cache/i.test(error.message)) return;
       if (error) throw new Error(`${TABLES[i]}: ${error.message}`);
       next[TABLES[i]] = (data as Json[]).map((row) => fromRow(TABLES[i], row));
     });
-    this.commit(next as unknown as Database);
+    const loaded = next as unknown as Database;
+    // ענן ריק נשאר ריק (כדי שיוצע להעלות נתונים); אחרת משלימים שדות חסרים
+    this.commit(loaded.settings.length ? normalize(loaded) : loaded);
   }
 
   /** עדכון של שורה אחת בתמונת המצב המקומית: row להוספה/עדכון, או removeId למחיקה. */

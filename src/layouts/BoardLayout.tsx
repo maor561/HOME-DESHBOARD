@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { SkyBackdrop } from '../components/dashboard/SkyBackdrop';
 import {
-  ActivityList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, TaskList, WeatherNow, WeekStrip, sandwichTitle,
+  ActivityList, Card, Heading, MealsToday, PhotoFrame, Quote, SandwichList, TasksCard, WeatherNow, WeekStrip, sandwichTitle,
 } from '../components/dashboard/widgets';
 import type { DashboardModel } from '../hooks/useDashboard';
 
@@ -36,7 +36,7 @@ export function BoardLayout({ model }: { model: DashboardModel }) {
             </Card>
           )}
           {show('activities') && <Card title={model.activities.title} style={note('.5deg', '#dcebf7')}><ActivityList rows={model.activities.rows} /></Card>}
-          {show('tasks') && <Card title="משימות" style={note('-.4deg', '#fde3e0')}><TaskList rows={model.tasks} /></Card>}
+          {show('tasks') && <TasksCard model={model} style={note('-.4deg', '#fde3e0')} />}
         </div>
         {show('calendar') && <WeekStrip model={model} style={note('0deg', '#fffdf7')} />}
       </div>

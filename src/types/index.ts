@@ -21,6 +21,10 @@ export interface FamilyMember {
   /** האם מכינים לו/לה כריך לבית הספר */
   getsSandwich: boolean;
   sortOrder: number;
+  /** יש לו/לה טלפון או טאבלט שאפשר לחבר ל"מסך הילד" */
+  hasDevice: boolean;
+  /** כוכבים שנצברו על משימות שבוצעו */
+  stars: number;
 }
 
 /** ימי הולדת של אנשים שאינם בני המשפחה (סבא, סבתא, חברים). בני המשפחה נכנסים אוטומטית. */
@@ -46,6 +50,8 @@ export interface Activity {
   endTime: Time;
   place: string;
   icon: string;
+  /** מה להביא לחוג; מוצג במסך הבוקר ובמסך הילד */
+  bring: string;
 }
 
 export type MealKind = 'sandwich' | 'lunch' | 'dinner' | 'note';
@@ -72,6 +78,8 @@ export interface Task {
   priority: 'normal' | 'high';
   memberId: ID | null;
   repeat: TaskRepeat;
+  /** כמה כוכבים המשימה שווה לילד שמבצע אותה */
+  stars: number;
 }
 
 export interface DailyQuote {
@@ -81,6 +89,28 @@ export interface DailyQuote {
   active: boolean;
   /** משפט שנקבע ידנית לתאריך מסוים גובר על הבחירה האוטומטית */
   date: ISODate | null;
+}
+
+export interface ShoppingItem {
+  id: ID;
+  familyId: ID;
+  text: string;
+  done: boolean;
+  doneAt: string | null;
+  /** בן המשפחה שהוסיף את הפריט, אם ידוע */
+  addedBy: ID | null;
+  createdAt: string;
+}
+
+/** בקשה של ילד לכריך אחר ביום מסוים. הורה מאשר או דוחה בתפריט השבועי. */
+export interface MealRequest {
+  id: ID;
+  familyId: ID;
+  memberId: ID;
+  date: ISODate;
+  text: string;
+  status: 'pending' | 'approved' | 'declined';
+  createdAt: string;
 }
 
 export interface Photo {
@@ -136,7 +166,9 @@ export interface Settings {
   nightDim: { enabled: boolean; from: Time; to: Time };
   widgets: { key: WidgetKey; visible: boolean }[];
   /** מה נכנס ללוח השנה אוטומטית, ואילו אירועים אוטומטיים הוסתרו (לפי מפתח האירוע) */
-  calendar: { holidays: boolean; funDays: boolean; hidden: string[] };
+  calendar: { holidays: boolean; funDays: boolean; shabbat: boolean; hidden: string[] };
+  /** מסך היציאה מהבית: באילו ימים, ממתי, ומתי יוצאים */
+  morning: { enabled: boolean; from: Time; leave: Time; days: number[] };
   photoIntervalSec: number;
   photoShuffle: boolean;
   /** קוד הכניסה ל-Admin. בשלב המקומי נשמר כטקסט; בענן יוחלף ב-Supabase Auth. */
@@ -153,6 +185,8 @@ export interface Database {
   daily_quotes: DailyQuote[];
   photos: Photo[];
   events: CalendarEvent[];
+  shopping_items: ShoppingItem[];
+  meal_requests: MealRequest[];
   settings: Settings[];
 }
 

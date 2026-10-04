@@ -22,7 +22,7 @@ export function CalendarScreen({ go }: ScreenProps) {
   const now = useNow();
   const [draft, setDraft] = useState<Draft | null>(null);
   const start = displayedWeekStart(now);
-  const holidays = useHolidays(toISODate(start), toISODate(addDays(start, 6)), settings.calendar.holidays);
+  const holidays = useHolidays(toISODate(start), toISODate(addDays(start, 6)), settings);
   const week = buildWeek(now, { events: db.events, holidays, members, birthdays: db.birthdays, settings }, true);
   const hidden = new Set(settings.calendar.hidden);
   const saveCalendar = (patch: Partial<typeof settings.calendar>) => updateSettings(settings, { calendar: { ...settings.calendar, ...patch } });
@@ -53,6 +53,9 @@ export function CalendarScreen({ go }: ScreenProps) {
       <Panel title="מה נכנס אוטומטית">
         <ListRow lead={<Avatar color={EVENT_COLOR.holiday}>🕎</Avatar>} title="חגים ומועדים" subtitle="לפי הלוח העברי">
           <Toggle label="חגים ומועדים" checked={settings.calendar.holidays} onChange={(holidays) => saveCalendar({ holidays })} />
+        </ListRow>
+        <ListRow lead={<Avatar color={EVENT_COLOR.shabbat}>🕯️</Avatar>} title="כניסת שבת וצאת שבת" subtitle={`לפי ${settings.city}`}>
+          <Toggle label="כניסת שבת וצאת שבת" checked={settings.calendar.shabbat} onChange={(shabbat) => saveCalendar({ shabbat })} />
         </ListRow>
         <ListRow lead={<Avatar color={EVENT_COLOR.fun}>🍕</Avatar>} title="ימים מיוחדים" subtitle="יום הפיצה, יום ההמבורגר ועוד">
           <Toggle label="ימים מיוחדים" checked={settings.calendar.funDays} onChange={(funDays) => saveCalendar({ funDays })} />

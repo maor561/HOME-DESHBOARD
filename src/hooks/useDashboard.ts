@@ -3,7 +3,7 @@ import {
   WEEKDAYS, addDays, dueLabel, formatLongDate, formatMinutes, isNightDim, minutesOf, quoteOfDay, timeToMinutes, toISODate, upcomingBirthdays,
   type UpcomingBirthday,
 } from '../lib/dates';
-import { buildWeek, displayedWeekStart, type CalendarDay } from '../lib/calendar';
+import { buildWeek, displayedWeekStart, eventsOn, type CalendarDay } from '../lib/calendar';
 import { orbPosition, phaseOf, skyOf, type Orb, type Phase, type Sky } from '../lib/sky';
 import { weatherText } from '../services/weather';
 import type { FamilyMember, Settings, Weather, WeatherKind, WidgetKey } from '../types';
@@ -35,7 +35,21 @@ export interface WeekDay extends CalendarDay {
   weather: { kind: WeatherKind; max: number } | null;
 }
 
+export interface MorningKid {
+  member: FamilyMember;
+  sandwich: string;
+  bring: string;
+  activity: string;
+  task: string;
+}
+
 export interface DashboardModel {
+  /** יום הולדת שחל היום: שמות החוגגים והגיל (כשיש חוגג אחד וגילו ידוע) */
+  celebration: { names: string; age: number | null } | null;
+  /** פריטים פתוחים ברשימת הקניות */
+  shopping: string[];
+  /** מסך היציאה מהבית; פעיל בבקרי הימים שנבחרו, עד קצת אחרי שעת היציאה */
+  morning: { active: boolean; leaveIn: number; leaveAt: string; tip: string; kids: MorningKid[]; highlight: string };
   week: { label: string; range: string; days: WeekDay[] };
   familyName: string;
   settings: Settings;
@@ -88,7 +102,7 @@ export function useDashboard(): DashboardModel {
   const settings = db.settings[0];
   const liveWeather = useWeather(settings);
   const weekStart = displayedWeekStart(effectiveNow(realNow).now);
-  const holidays = useHolidays(toISODate(weekStart), toISODate(addDays(weekStart, 6)), settings.calendar.holidays);
+  const holidays = useHolidays(toISODate(weekStart), toISODate(addDays(weekStart, 6)), settings);
 
   return useMemo(() => {
     const { now, preview } = effectiveNow(realNow);
@@ -112,6 +126,34 @@ export function useDashboard(): DashboardModel {
 
     const visible = new Map(settings.widgets.map((w) => [w.key, w.visible]));
 
+    const birthdaysToday = upcomingBirthdays(members, db.birthdays, now, 99).filter((b) => b.days === 0);
+    const calendarSources = { events: db.events, holidays, members, birthdays: db.birthdays, settings };
+
+    // מצב בוקר
+    const { morning } = settings;
+    const from = timeToMinutes(morning.from);
+    const leave = timeToMinutes(morning.leave);
+    const forced = new URLSearchParams(window.location.search).get('mode') === 'morning';
+    const morningActive = forced || (morning.enabled && morning.days.includes(now.getDay()) && minutes >= from && minutes < leave + 10);
+    const tip =
+      weather.kind === 'rain' ? '☔ יורד גשם: מעיל ומטרייה'
+      : weather.kind === 'snow' ? '🧤 שלג! מעיל, כובע וכפפות'
+      : weather.temp <= 15 ? '🧥 קר הבוקר: מעיל'
+      : weather.temp <= 22 ? '🧶 קריר: כדאי סוודר'
+      : '🧢 חם היום: כובע ובקבוק מים';
+    const todayActivities = dayActivities(now.getDay());
+    const morningKids: MorningKid[] = members.filter((m) => m.getsSandwich).map((member) => {
+      const mine = todayActivities.filter((a) => a.memberId === member.id);
+      const task = db.tasks.find((t) => t.memberId === member.id && !t.done && (!t.dueDate || t.dueDate <= today));
+      return {
+        member,
+        sandwich: db.meals.find((m) => m.date === today && m.kind === 'sandwich' && m.memberId === member.id)?.text ?? '',
+        bring: [...new Set(mine.map((a) => a.bring).filter(Boolean))].join(', '),
+        activity: mine[0] ? `${mine[0].startTime} · ${mine[0].title}` : '',
+        task: task?.title ?? '',
+      };
+    });
+
     return {
       familyName: db.families[0]?.name ?? '',
       settings,
@@ -119,10 +161,22 @@ export function useDashboard(): DashboardModel {
       dateText: formatLongDate(now),
       minutes,
       dim: preview.minutes === null && isNightDim(settings, minutes),
+      celebration: birthdaysToday.length
+        ? { names: birthdaysToday.map((b) => b.name).join(' ו'), age: birthdaysToday.length === 1 ? birthdaysToday[0].age : null }
+        : null,
+      shopping: db.shopping_items.filter((i) => !i.done).sort((a, b) => a.createdAt.localeCompare(b.createdAt)).map((i) => i.text),
+      morning: {
+        active: morningActive,
+        leaveIn: leave - minutes,
+        leaveAt: morning.leave,
+        tip,
+        kids: morningKids,
+        highlight: eventsOn(today, calendarSources)[0]?.title ?? '',
+      },
       week: {
         label: toISODate(weekStart) > toISODate(now) ? 'השבוע הבא' : 'השבוע',
         range: `${weekStart.getDate()}.${weekStart.getMonth() + 1}–${addDays(weekStart, 6).getDate()}.${addDays(weekStart, 6).getMonth() + 1}`,
-        days: buildWeek(now, { events: db.events, holidays, members, birthdays: db.birthdays, settings }).map((day) => {
+        days: buildWeek(now, calendarSources).map((day) => {
           const forecast = day.offset < 0 ? undefined : weather.forecast.find((f) => f.date === day.date);
           const today = day.offset === 0 && weather.live ? { kind: weather.kind, max: weather.temp } : null;
           return { ...day, weather: today ?? (forecast ? { kind: forecast.kind, max: forecast.max } : null) };

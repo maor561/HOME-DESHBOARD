@@ -20,6 +20,7 @@ function Frame({ children }: { children: ReactNode }) {
 
 /** מזהה המסך שממתין לאישור, כשהגענו לכאן מסריקת קוד ה-QR שלו. */
 const pendingDevice = () => new URLSearchParams(window.location.search).get('pair');
+const pendingKind = () => (new URLSearchParams(window.location.search).get('kind') === 'kid' ? 'kid' : 'screen');
 
 /**
  * שער הכניסה ל-Admin במצב ענן: התחברות במייל וסיסמה, אישור מסך שנסרק,
@@ -31,6 +32,8 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [access, setAccess] = useState<Access | null>(null);
   const [device, setDevice] = useState(pendingDevice);
+  const [kind] = useState(pendingKind);
+  const [kidId, setKidId] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -111,12 +114,27 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
   }
 
   if (device) {
+    const sorted = [...db.family_members].sort((a, b) => a.sortOrder - b.sortOrder);
+    const candidates = sorted.some((m) => m.hasDevice) ? sorted.filter((m) => m.hasDevice) : sorted;
+    const kid = db.family_members.find((m) => m.id === kidId);
+    const approve = () => cloud.approveDevice(device, kind === 'kid' ? `המסך של ${kid?.name}` : 'מסך הבית', kind === 'kid' ? kidId : null);
     return (
       <Frame>
-        <h1 className="text-center font-serif text-[30px] font-bold">לחבר את המסך הזה?</h1>
+        <h1 className="text-center font-serif text-[30px] font-bold">{kind === 'kid' ? 'חיבור מסך של ילד' : 'לחבר את המסך הזה?'}</h1>
         <p className="text-center opacity-85">ודאו שזה הקוד שמופיע על המסך:</p>
         <p className="text-center font-serif text-[64px] font-bold leading-none tracking-[0.12em]" dir="ltr">{pairCode(device)}</p>
-        <button className={ACTION} disabled={busy} onClick={() => run(async () => { await cloud.approveDevice(device, 'מסך'); closePairing(); }, 'החיבור נכשל')}>
+        {kind === 'kid' && (
+          <>
+            <p className="text-center opacity-85">של מי המכשיר?</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {candidates.map((m) => (
+                <button key={m.id} aria-pressed={kidId === m.id} onClick={() => setKidId(m.id)}
+                  className={`h-11 rounded-2xl px-4 font-bold ${kidId === m.id ? 'bg-white text-accent' : 'bg-white/20'}`}>{m.name}</button>
+              ))}
+            </div>
+          </>
+        )}
+        <button className={ACTION} disabled={busy || (kind === 'kid' && !kidId)} onClick={() => run(async () => { await approve(); closePairing(); }, 'החיבור נכשל')}>
           {busy ? 'מחבר…' : 'אישור וחיבור'}
         </button>
         <button className="h-11 font-bold underline underline-offset-4" onClick={closePairing}>ביטול</button>

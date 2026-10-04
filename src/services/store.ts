@@ -20,7 +20,7 @@ export interface DataStore {
   reset(): Promise<void>;
 }
 
-export const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'settings'];
+export const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'settings'];
 
 export const LOCAL_STORAGE_KEY = 'cohen-dashboard-db-v1';
 const CHANNEL = 'cohen-dashboard-sync';
@@ -31,8 +31,12 @@ export function normalize(db: Partial<Database>): Database {
   const full = { ...seed, ...db } as Database;
   return {
     ...full,
+    // שדות שנוספו בגרסאות מאוחרות מקבלים ברירת מחדל בנתונים ישנים
+    family_members: full.family_members.map((m) => ({ ...m, hasDevice: m.hasDevice ?? false, stars: m.stars ?? 0 })),
+    activities: full.activities.map((a) => ({ ...a, bring: a.bring ?? '' })),
+    tasks: full.tasks.map((t) => ({ ...t, stars: t.stars ?? 1 })),
     settings: full.settings.map((s) => {
-      const merged = { ...seed.settings[0], ...s };
+      const merged = { ...seed.settings[0], ...s, calendar: { ...seed.settings[0].calendar, ...s.calendar } };
       const kept = merged.widgets.filter((w) => WIDGETS.includes(w.key));
       const known = new Set(kept.map((w) => w.key));
       // כרטיסים שנוספו בגרסה חדשה מצטרפים כמוצגים; כרטיסים שהוסרו מהמערכת נעלמים מהרשימה

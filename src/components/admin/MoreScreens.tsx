@@ -17,6 +17,7 @@ export function MoreScreen({ go, onLock }: ScreenProps & { onLock: () => void })
     <>
       <ScreenHeader title="עוד" />
       <Panel>
+        <LinkRow icon="🛒" title="רשימת קניות" subtitle={`${db.shopping_items.filter((i) => !i.done).length} פריטים`} onClick={() => go('shop')} />
         <LinkRow icon="🗓️" title="לוח שנה" subtitle="חגים, חופשות, ימים מיוחדים ואירועים" onClick={() => go('cal')} />
         <LinkRow icon="👨‍👩‍👧‍👦" title="משפחה" subtitle={`${db.family_members.length} בני משפחה`} onClick={() => go('family')} />
         <LinkRow icon="🎂" title="ימי הולדת" subtitle={`המשפחה ועוד ${db.birthdays.length} אנשים`} onClick={() => go('bdays')} />
@@ -52,12 +53,12 @@ export function FamilyScreen({ go }: ScreenProps) {
       <ScreenHeader title="משפחה" onBack={() => go('more')} />
       <Panel>
         {members.map((m) => (
-          <ListRow key={m.id} lead={<Avatar color={m.color}>{m.name[0]}</Avatar>} title={m.name} subtitle={`${formatBirth(m.birthDate)}${m.getsSandwich ? ' · מקבל/ת כריך' : ''}`}>
+          <ListRow key={m.id} lead={<Avatar color={m.color}>{m.name[0]}</Avatar>} title={m.name} subtitle={`${formatBirth(m.birthDate)}${m.getsSandwich ? ' · כריך' : ''}${m.hasDevice ? ' · מסך אישי' : ''}${m.stars ? ` · ⭐ ${m.stars}` : ''}`}>
             <IconButton label="עריכה" onClick={() => setDraft({ ...m, isNew: false })}><Pencil className="size-5" /></IconButton>
           </ListRow>
         ))}
       </Panel>
-      <Button variant="ghost" wide onClick={() => setDraft({ id: uid(), familyId: FAMILY_ID, name: '', birthDate: null, color: MEMBER_COLORS[members.length % MEMBER_COLORS.length], icon: null, getsSandwich: false, sortOrder: members.length, isNew: true })}>
+      <Button variant="ghost" wide onClick={() => setDraft({ id: uid(), familyId: FAMILY_ID, name: '', birthDate: null, color: MEMBER_COLORS[members.length % MEMBER_COLORS.length], icon: null, getsSandwich: false, sortOrder: members.length, hasDevice: false, stars: 0, isNew: true })}>
         <Plus className="size-5" /> הוספת בן משפחה
       </Button>
       {draft && (
@@ -70,6 +71,10 @@ export function FamilyScreen({ go }: ScreenProps) {
           <div className="mt-3 flex items-center gap-3">
             <span className="flex-1"><b className="block">כריך לבית הספר</b><small className="text-sm text-soft">יופיע בתפריט השבועי</small></span>
             <Toggle label="כריך לבית הספר" checked={draft.getsSandwich} onChange={(getsSandwich) => setDraft({ ...draft, getsSandwich })} />
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="flex-1"><b className="block">יש טלפון או טאבלט</b><small className="text-sm text-soft">אפשר לחבר לו/לה מסך אישי (‎/kid)</small></span>
+            <Toggle label="יש טלפון או טאבלט" checked={draft.hasDevice} onChange={(hasDevice) => setDraft({ ...draft, hasDevice })} />
           </div>
           <SheetActions onCancel={() => setDraft(null)} onSave={save} disabled={!draft.name.trim()} onDelete={draft.isNew ? undefined : remove} />
         </Sheet>

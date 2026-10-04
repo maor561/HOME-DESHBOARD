@@ -11,7 +11,7 @@ import { useFamily } from './shared';
 type Filter = 'open' | 'all' | 'repeat';
 const REPEAT_LABEL: Record<TaskRepeat, string> = { none: 'חד-פעמית', daily: 'כל יום', weekly: 'כל שבוע', monthly: 'כל חודש' };
 
-export const newTask = (): Task => ({ id: uid(), familyId: FAMILY_ID, title: '', done: false, completedAt: null, dueDate: toISODate(new Date()), priority: 'normal', memberId: null, repeat: 'none' });
+export const newTask = (): Task => ({ id: uid(), familyId: FAMILY_ID, title: '', done: false, completedAt: null, dueDate: toISODate(new Date()), priority: 'normal', memberId: null, repeat: 'none', stars: 1 });
 
 export function TaskSheet({ task, isNew, onClose }: { task: Task; isNew: boolean; onClose: () => void }) {
   const { members } = useFamily();
@@ -44,6 +44,7 @@ export function TaskSheet({ task, isNew, onClose }: { task: Task; isNew: boolean
       {dueKey === 'date' && <TextInput type="date" className="mt-2" value={draft.dueDate ?? ''} onChange={(e) => setDraft({ ...draft, dueDate: e.target.value || null })} />}
       <Picker label="חוזרת" value={draft.repeat} options={Object.entries(REPEAT_LABEL) as [TaskRepeat, string][]} onChange={(repeat) => setDraft({ ...draft, repeat })} />
       <Picker label="עדיפות" value={draft.priority} options={[['normal', 'רגילה'], ['high', 'גבוהה']]} onChange={(priority) => setDraft({ ...draft, priority })} />
+      {draft.memberId && <Picker label="כוכבים על ביצוע" value={draft.stars} options={[[1, '⭐'], [2, '⭐⭐'], [3, '⭐⭐⭐']]} onChange={(stars) => setDraft({ ...draft, stars })} />}
       <SheetActions onCancel={onClose} onSave={save} saveLabel={isNew ? 'הוספה' : 'שמירה'} disabled={!draft.title.trim()} onDelete={isNew ? undefined : remove} />
     </Sheet>
   );

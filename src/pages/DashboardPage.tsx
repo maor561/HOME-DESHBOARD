@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
-import { Clock } from '../components/dashboard/widgets';
+import { Clock, Confetti } from '../components/dashboard/widgets';
 import { useDashboard } from '../hooks/useDashboard';
 import { BoardLayout } from '../layouts/BoardLayout';
 import { GlassLayout } from '../layouts/GlassLayout';
+import { MorningLayout } from '../layouts/MorningLayout';
 import '../styles/dashboard.css';
 
 const LAYOUTS = { glass: GlassLayout, board: BoardLayout };
@@ -10,14 +11,15 @@ const LAYOUTS = { glass: GlassLayout, board: BoardLayout };
 /** המסך הקבוע בבית. מותאם ל-16:9 ומתכווץ בפרופורציה לכל גודל מסך. */
 export function DashboardPage() {
   const model = useDashboard();
-  const Layout = LAYOUTS[model.settings.style];
+  const Layout = model.morning.active ? MorningLayout : LAYOUTS[model.settings.style];
   const [s1, s2, s3] = model.sky.colors;
   const vars = { '--s1': s1, '--s2': s2, '--s3': s3, '--glow': model.sky.glow, '--veil': model.sky.veil, '--ts': model.settings.textScale } as CSSProperties;
 
   return (
     <div className="dashboard-root">
-      <div className="stage" data-scheme={model.sky.scheme} data-phase={model.phase} data-weather={model.weather.kind} data-dim={model.dim ? 1 : 0} data-board-font={model.settings.boardFont} style={vars}>
+      <div className="stage" data-scheme={model.sky.scheme} data-phase={model.phase} data-weather={model.weather.kind} data-dim={model.dim ? 1 : 0} data-board-font={model.settings.boardFont} data-party={model.celebration ? 1 : 0} style={vars}>
         <Layout model={model} />
+        {model.celebration && <Confetti />}
         <div className="layer dim" aria-hidden={!model.dim}>
           <div>
             <Clock value={model.clock} />

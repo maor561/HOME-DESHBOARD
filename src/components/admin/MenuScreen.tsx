@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { WEEKDAYS, addDays, toISODate } from '../../lib/dates';
-import { copyMeals, copyWeek, setMeal } from '../../services/mutations';
+import { answerMealRequest, copyMeals, copyWeek, menuHistory, setMeal, suggestWeek } from '../../services/mutations';
 import type { ISODate, MealKind } from '../../types';
 import { Button, Field, IconButton, MemberChip, Panel, ScreenHeader, Segmented, Tag, TextInput, toast } from '../ui';
 import { useFamily, weekStart, type FamilyData } from './shared';
@@ -36,6 +36,17 @@ export function MenuScreen() {
   const text = (day: ISODate, kind: MealKind, memberId: string | null = null) =>
     db.meals.find((m) => m.date === day && m.kind === kind && m.memberId === memberId)?.text ?? '';
 
+  // ההצעות מתחת לשדות מתייחסות לשדה האחרון שנגעו בו
+  const [focus, setFocus] = useState<{ kind: MealKind; memberId: string | null }>({ kind: 'sandwich', memberId: kids[0]?.id ?? null });
+  const focusName = focus.kind === 'sandwich' ? `ל${family.memberById.get(focus.memberId ?? '')?.name ?? ''}` : focus.kind === 'lunch' ? 'לצהריים' : 'לערב';
+  const suggestions = menuHistory(db, focus.kind, focus.memberId).filter((option) => option !== text(date, focus.kind, focus.memberId).trim()).slice(0, 8);
+  const requests = db.meal_requests.filter((r) => r.date === date && r.status === 'pending');
+  const listId = (kind: MealKind, memberId: string | null) => `menu-${kind}-${memberId ?? 'all'}`;
+
+  const fillWeek = async () => {
+    const count = await suggestWeek(db, start, kids);
+    toast(count ? `מולאו ${count} שדות ריקים מתוך המאגר` : 'אין שדות ריקים, או שעוד אין מאגר להציע ממנו');
+  };
   const copyYesterday = async () => {
     const count = await copyMeals(db, toISODate(addDays(days[dayIndex], -1)), date, ['sandwich']);
     toast(count ? 'הכריכים הועתקו מאתמול' : 'אין כריכים ביום הקודם');
@@ -71,17 +82,38 @@ export function MenuScreen() {
               );
             })}
           </div>
+          {requests.map((request) => (
+            <div key={request.id} className="mb-3.5 rounded-2xl bg-[#fff4d6] px-3.5 py-3 text-[15px] font-semibold">
+              🥪 {family.memberById.get(request.memberId)?.name} ביקש/ה: <b>{request.text}</b>
+              <div className="mt-2 flex gap-2">
+                <Button className="h-10 flex-1 text-sm" onClick={async () => { await answerMealRequest(request, true); toast('הכריך עודכן'); }}>אישור</Button>
+                <Button variant="ghost" className="h-10 flex-1 text-sm" onClick={() => answerMealRequest(request, false)}>לא הפעם</Button>
+              </div>
+            </div>
+          ))}
           <Panel title="כריכים לבית הספר" action={<button onClick={copyYesterday}>העתק מאתמול</button>}>
             {kids.map((kid) => (
               <label key={kid.id} className="flex items-center gap-2.5 py-1.5">
                 <MemberChip member={kid} />
-                <TextInput value={text(date, 'sandwich', kid.id)} placeholder="מה בכריך?" aria-label={`כריך של ${kid.name}`} onChange={(e) => setMeal(date, 'sandwich', kid.id, e.target.value)} />
+                <TextInput value={text(date, 'sandwich', kid.id)} placeholder="מה בכריך?" aria-label={`כריך של ${kid.name}`} list={listId('sandwich', kid.id)}
+                  onFocus={() => setFocus({ kind: 'sandwich', memberId: kid.id })} onChange={(e) => setMeal(date, 'sandwich', kid.id, e.target.value)} />
+                <datalist id={listId('sandwich', kid.id)}>{menuHistory(db, 'sandwich', kid.id).map((option) => <option key={option} value={option} />)}</datalist>
               </label>
             ))}
           </Panel>
+          {suggestions.length > 0 && (
+            <div className="-mx-4 mb-3.5 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+              <span className="whitespace-nowrap text-[13px] font-bold text-soft">הצעות {focusName}:</span>
+              {suggestions.map((option) => (
+                <button key={option} onClick={() => setMeal(date, focus.kind, focus.memberId, option)} className="h-[34px] flex-none rounded-full bg-accent-soft px-3 text-sm font-bold text-accent">{option}</button>
+              ))}
+            </div>
+          )}
           <Panel title="ארוחות">
-            <Field label="צהריים"><TextInput value={text(date, 'lunch')} placeholder="מה אוכלים?" onChange={(e) => setMeal(date, 'lunch', null, e.target.value)} /></Field>
-            <Field label="ערב"><TextInput value={text(date, 'dinner')} placeholder="מה אוכלים?" onChange={(e) => setMeal(date, 'dinner', null, e.target.value)} /></Field>
+            <Field label="צהריים"><TextInput value={text(date, 'lunch')} placeholder="מה אוכלים?" list={listId('lunch', null)} onFocus={() => setFocus({ kind: 'lunch', memberId: null })} onChange={(e) => setMeal(date, 'lunch', null, e.target.value)} /></Field>
+            <Field label="ערב"><TextInput value={text(date, 'dinner')} placeholder="מה אוכלים?" list={listId('dinner', null)} onFocus={() => setFocus({ kind: 'dinner', memberId: null })} onChange={(e) => setMeal(date, 'dinner', null, e.target.value)} /></Field>
+            <datalist id={listId('lunch', null)}>{menuHistory(db, 'lunch').map((option) => <option key={option} value={option} />)}</datalist>
+            <datalist id={listId('dinner', null)}>{menuHistory(db, 'dinner').map((option) => <option key={option} value={option} />)}</datalist>
             <Field label="הערה"><TextInput value={text(date, 'note')} placeholder="למשל: להפשיר עוף בבוקר" onChange={(e) => setMeal(date, 'note', null, e.target.value)} /></Field>
           </Panel>
           <p className="text-center text-sm text-soft">נשמר אוטומטית</p>
@@ -111,6 +143,8 @@ export function MenuScreen() {
               );
             })}
           </section>
+          <Button wide className="mb-2.5" onClick={fillWeek}>✨ הצע לי שבוע</Button>
+          <p className="mb-3.5 px-0.5 text-sm text-soft">ממלא רק שדות ריקים, מתוך מנות וכריכים שכבר הזנתם. אפשר לשנות כל שדה אחר כך.</p>
           <Button variant="ghost" wide onClick={copyPreviousWeek}><Copy className="size-5" /> העתקת כל השבוע הקודם</Button>
         </>
       )}

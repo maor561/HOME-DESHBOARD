@@ -31,7 +31,7 @@ export function HomeScreen({ go }: ScreenProps) {
     ['🥪', 'כריכים למחר', `יום ${WEEKDAYS[tomorrowDate.getDay()]} · ${sandwichesTomorrow} מתוך ${kids.length}`, () => go('menu')],
     ['🍝', 'מה אוכלים', 'התפריט השבועי', () => go('menu')],
     ['✅', 'משימה חדשה', `${openTasks} פתוחות`, () => setAddingTask(true)],
-    ['🖼️', 'תמונות', `${db.photos.length} תמונות במסך`, () => go('photos')],
+    ['🛒', 'רשימת קניות', `${db.shopping_items.filter((i) => !i.done).length} פריטים`, () => go('shop')],
   ];
 
   return (
