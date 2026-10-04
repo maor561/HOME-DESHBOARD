@@ -52,12 +52,13 @@ export function ViewerGate({ children, kind = 'screen' }: { children: ReactNode;
     let timer = 0;
     const startedAt = Date.now();
     const again = () => {
-      timer = window.setTimeout(check, pollDelay(startedAt));
+      timer = window.setTimeout(() => void check(), pollDelay(startedAt));
     };
 
-    const check = async () => {
-      // לשונית ברקע: לא שולחים בקשות, רק בודקים שוב מאוחר יותר
-      if (document.hidden) return again();
+    const check = async (initial = false) => {
+      // לשונית ברקע: לא שולחים בקשות, רק בודקים שוב מאוחר יותר. הבדיקה הראשונה תמיד רצה,
+      // כדי שהמסך לא יישאר על "טוען" בדפדפן שמדווח בטעות שהוא מוסתר.
+      if (document.hidden && !initial) return again();
       try {
         // קודם בודקים עם מה שיש; משתמש אנונימי נוצר רק כשבאמת צריך לחבר מסך
         let session = await cloud.getSession();
@@ -77,7 +78,7 @@ export function ViewerGate({ children, kind = 'screen' }: { children: ReactNode;
         if (!cancelled) again();
       }
     };
-    void check();
+    void check(true);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
