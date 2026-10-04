@@ -120,8 +120,7 @@ export type WidgetKey =
   | 'birthdays'
   | 'calendar'
   | 'photos'
-  | 'quote'
-  | 'home';
+  | 'quote';
 
 export interface Settings {
   id: ID;

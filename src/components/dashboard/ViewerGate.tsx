@@ -3,7 +3,16 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { store } from '../../services/store';
 import type { Access, SupabaseStore } from '../../services/supabaseStore';
 
-const POLL_MS = 3000;
+/**
+ * קצב הבדיקה אם המסך כבר אושר. מהיר בדקות הראשונות (כשמישהו עומד מול המסך עם הטלפון),
+ * ואז מאט, כדי שמסך שנשאר על קוד ה-QR לא ישלח עשרות אלפי בקשות ביום.
+ */
+function pollDelay(startedAt: number): number {
+  const waited = Date.now() - startedAt;
+  if (waited < 2 * 60_000) return 3_000;
+  if (waited < 15 * 60_000) return 15_000;
+  return 60_000;
+}
 
 /** קוד קצר שמופיע גם במסך וגם בטלפון, כדי לוודא שמאשרים את המסך הנכון. */
 export const pairCode = (userId: string): string => String(parseInt(userId.replace(/-/g, '').slice(0, 8), 16) % 10000).padStart(4, '0');
@@ -41,8 +50,14 @@ export function ViewerGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let timer = 0;
+    const startedAt = Date.now();
+    const again = () => {
+      timer = window.setTimeout(check, pollDelay(startedAt));
+    };
 
     const check = async () => {
+      // לשונית ברקע: לא שולחים בקשות, רק בודקים שוב מאוחר יותר
+      if (document.hidden) return again();
       try {
         // קודם בודקים עם מה שיש; משתמש אנונימי נוצר רק כשבאמת צריך לחבר מסך
         let session = await cloud.getSession();
@@ -57,9 +72,9 @@ export function ViewerGate({ children }: { children: ReactNode }) {
         if (cancelled) return;
         // בלי משתמש אנונימי אי אפשר לחבר מסך: כנראה שהאפשרות כבויה ב-Supabase
         setAccess(next === 'none' && !session ? 'error' : next);
-        if (next === 'none') timer = window.setTimeout(check, POLL_MS);
+        if (next === 'none') again();
       } catch {
-        if (!cancelled) timer = window.setTimeout(check, POLL_MS);
+        if (!cancelled) again();
       }
     };
     void check();

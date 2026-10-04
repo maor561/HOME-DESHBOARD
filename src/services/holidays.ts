@@ -18,7 +18,7 @@ interface HebcalResponse {
 export const hebcal: HolidayProvider = {
   async fetch(start, end) {
     const params = new URLSearchParams({ v: '1', cfg: 'json', maj: 'on', min: 'on', mod: 'on', nx: 'off', ss: 'off', mf: 'off', c: 'off', s: 'off', i: 'on', lg: 'he-x-NoNikud', start, end });
-    const response = await fetch(`https://www.hebcal.com/hebcal?${params}`);
+    const response = await fetch(`https://www.hebcal.com/hebcal?${params}`, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error(`Hebcal ${response.status}`);
     const data = (await response.json()) as HebcalResponse;
     return (data.items ?? [])

@@ -33,9 +33,10 @@ export function normalize(db: Partial<Database>): Database {
     ...full,
     settings: full.settings.map((s) => {
       const merged = { ...seed.settings[0], ...s };
-      const known = new Set(merged.widgets.map((w) => w.key));
-      // כרטיסים שנוספו בגרסה חדשה מצטרפים לרשימה כמוצגים
-      return { ...merged, widgets: [...merged.widgets, ...WIDGETS.filter((key) => !known.has(key)).map((key) => ({ key, visible: key !== 'home' }))] };
+      const kept = merged.widgets.filter((w) => WIDGETS.includes(w.key));
+      const known = new Set(kept.map((w) => w.key));
+      // כרטיסים שנוספו בגרסה חדשה מצטרפים כמוצגים; כרטיסים שהוסרו מהמערכת נעלמים מהרשימה
+      return { ...merged, widgets: [...kept, ...WIDGETS.filter((key) => !known.has(key)).map((key) => ({ key, visible: true }))] };
     }),
   };
 }

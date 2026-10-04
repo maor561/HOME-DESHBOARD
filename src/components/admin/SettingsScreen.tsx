@@ -9,7 +9,7 @@ import { useFamily, type ScreenProps } from './shared';
 
 const WIDGET_LABEL: Record<WidgetKey, string> = {
   weather: 'מזג אוויר', sun: 'זריחה ושקיעה', calendar: 'לוח שנה שבועי ותחזית', sandwiches: 'כריכים למחר', meals: 'מה אוכלים היום', activities: 'חוגים',
-  tasks: 'משימות', birthdays: 'ימי הולדת קרובים', photos: 'תמונות מתחלפות', quote: 'משפט היום', home: 'מצב הבית (אין חיישן עדיין)',
+  tasks: 'משימות', birthdays: 'ימי הולדת קרובים', photos: 'תמונות מתחלפות', quote: 'משפט היום',
 };
 
 function StylePreview({ style }: { style: DashboardStyle }) {
@@ -122,13 +122,14 @@ export function SettingsScreen({ go }: ScreenProps) {
       </Panel>
 
       <Panel title="מה מוצג במסך">
-        {settings.widgets.map((widget) => (
+        {/* הסינון מסתיר כרטיסים שהוסרו מהמערכת אבל עוד שמורים בהגדרות ישנות */}
+        {settings.widgets.filter((widget) => widget.key in WIDGET_LABEL).map((widget) => (
           <div key={widget.key} className="flex min-h-[50px] items-center gap-3 py-1.5">
             <b className="flex-1">{WIDGET_LABEL[widget.key]}</b>
             <Toggle
               label={WIDGET_LABEL[widget.key]}
               checked={widget.visible}
-              onChange={(visible) => widget.key !== 'home' && save({ widgets: settings.widgets.map((w) => (w.key === widget.key ? { ...w, visible } : w)) })}
+              onChange={(visible) => save({ widgets: settings.widgets.map((w) => (w.key === widget.key ? { ...w, visible } : w)) })}
             />
           </div>
         ))}

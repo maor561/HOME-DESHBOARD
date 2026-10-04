@@ -37,7 +37,7 @@ export const openMeteo: WeatherProvider = {
       forecast_days: '9',
       temperature_unit: units === 'f' ? 'fahrenheit' : 'celsius',
     });
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error(`Open-Meteo ${response.status}`);
     const data = (await response.json()) as OpenMeteoResponse;
     const kind = kindOf(data.current.weather_code);

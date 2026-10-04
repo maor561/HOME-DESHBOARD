@@ -4,30 +4,36 @@ import type { ISODate } from '../types';
 
 const CACHE_KEY = 'cohen-dashboard-holidays-v1';
 
-function readCache(range: string): Holiday[] {
+const MAX_AGE_MS = 24 * 60 * 60_000;
+
+function readCache(range: string): { items: Holiday[]; fresh: boolean } {
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as { range: string; items: Holiday[] } | null;
-    return cached?.range === range ? cached.items : [];
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as { range: string; at?: number; items: Holiday[] } | null;
+    if (cached?.range !== range) return { items: [], fresh: false };
+    return { items: cached.items, fresh: Date.now() - (cached.at ?? 0) < MAX_AGE_MS };
   } catch {
-    return [];
+    return { items: [], fresh: false };
   }
 }
 
 /** חגים ומועדים בטווח התאריכים. נשמרים במטמון כדי שיופיעו גם בלי רשת. */
 export function useHolidays(start: ISODate, end: ISODate, enabled: boolean): Holiday[] {
   const range = `${start}:${end}`;
-  const [holidays, setHolidays] = useState<Holiday[]>(() => readCache(range));
+  const [holidays, setHolidays] = useState<Holiday[]>(() => readCache(range).items);
 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    setHolidays(readCache(range));
+    const cached = readCache(range);
+    setHolidays(cached.items);
+    // אותו שבוע כבר נטען ביממה האחרונה: אין צורך בבקשה נוספת
+    if (cached.fresh) return;
     holidayProvider
       .fetch(start, end)
       .then((items) => {
         if (cancelled) return;
         setHolidays(items);
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ range, items }));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ range, at: Date.now(), items }));
       })
       .catch((error) => console.warn('טעינת החגים נכשלה', error));
     return () => {

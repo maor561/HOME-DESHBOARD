@@ -3,7 +3,7 @@ import type { Database, Meal, WidgetKey } from '../types';
 
 export const FAMILY_ID = 'cohen';
 
-export const WIDGETS: WidgetKey[] = ['weather', 'sun', 'calendar', 'sandwiches', 'meals', 'activities', 'tasks', 'birthdays', 'photos', 'quote', 'home'];
+export const WIDGETS: WidgetKey[] = ['weather', 'sun', 'calendar', 'sandwiches', 'meals', 'activities', 'tasks', 'birthdays', 'photos', 'quote'];
 
 /**
  * נתוני פתיחה. בני המשפחה והתאריכים אמיתיים; התפריט, החוגים, המשימות,
@@ -85,7 +85,7 @@ export function createSeed(today = new Date()): Database {
         units: 'c',
         textScale: 1,
         nightDim: { enabled: true, from: '22:30', to: '06:00' },
-        widgets: WIDGETS.map((key) => ({ key, visible: key !== 'home' })),
+        widgets: WIDGETS.map((key) => ({ key, visible: true })),
         calendar: { holidays: true, funDays: true, hidden: [] },
         photoIntervalSec: 30,
         photoShuffle: true,

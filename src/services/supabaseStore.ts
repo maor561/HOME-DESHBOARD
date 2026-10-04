@@ -25,7 +25,10 @@ export const cloudConfig: CloudConfig | null = url && anonKey ? { url, anonKey }
 const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'settings'];
 const CACHE_KEY = 'cohen-dashboard-cloud-cache-v1';
 const PHOTO_BUCKET = 'photos';
-const REFRESH_MS = 5 * 60_000;
+/** רשת ביטחון בלבד: העדכונים השוטפים מגיעים ב-Realtime, בחיבור אחד פתוח ובלי בקשות חוזרות */
+const REFRESH_MS = 15 * 60_000;
+/** לא טוענים מחדש יותר מפעם בדקה כשחוזרים ללשונית */
+const MIN_RELOAD_GAP_MS = 60_000;
 
 const EMPTY: Database = { families: [], family_members: [], birthdays: [], activities: [], meals: [], tasks: [], daily_quotes: [], photos: [], events: [], settings: [] };
 
@@ -51,6 +54,7 @@ export class SupabaseStore implements DataStore {
   readonly client: SupabaseClient;
   private db: Database = EMPTY;
   private listeners = new Set<() => void>();
+  private lastReload = 0;
 
   constructor(config: CloudConfig) {
     this.client = createClient(config.url, config.anonKey);
@@ -77,8 +81,8 @@ export class SupabaseStore implements DataStore {
     });
 
     // רשת ביטחון למקרה שהחיבור החי נפל: רענון מלא מדי כמה דקות וכשחוזרים ללשונית
-    window.setInterval(() => void this.reload().catch(() => {}), REFRESH_MS);
-    document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && void this.reload().catch(() => {}));
+    window.setInterval(() => this.refreshIfVisible(REFRESH_MS / 2), REFRESH_MS);
+    document.addEventListener('visibilitychange', () => this.refreshIfVisible(MIN_RELOAD_GAP_MS));
   }
 
   getSnapshot = (): Database => this.db;
@@ -113,6 +117,12 @@ export class SupabaseStore implements DataStore {
     throw new Error('איפוס זמין רק במצב מקומי');
   }
 
+  /** רענון מלא, רק כשהלשונית גלויה ורק אם עבר מספיק זמן מהטעינה הקודמת. */
+  private refreshIfVisible(minGapMs: number): void {
+    if (document.hidden || Date.now() - this.lastReload < minGapMs) return;
+    void this.reload().catch(() => {});
+  }
+
   /** האזנה לשינויים בזמן אמת. נקראת מחדש כשהמשתמש מתחלף, כדי שההרשאות החדשות יחולו. */
   private listen(): void {
     void this.client.removeAllChannels();
@@ -143,16 +153,13 @@ export class SupabaseStore implements DataStore {
    * במסד הנתונים, ואז המערכת מתנהגת כמו קודם (צפייה פתוחה).
    */
   async checkAccess(session: Session | null): Promise<Access> {
-    const probe = await this.client.from('devices').select('user_id').limit(1);
-    if (probe.error && /does not exist|not find|schema cache/i.test(probe.error.message)) return 'open';
-    if (!session) return 'none';
-    const uid = session.user.id;
-    if (!session.user.is_anonymous) {
-      const { data } = await this.client.from('admins').select('user_id').eq('user_id', uid).maybeSingle();
-      return data ? 'admin' : 'none';
-    }
-    const { data } = await this.client.from('devices').select('user_id').eq('user_id', uid).maybeSingle();
-    return data ? 'device' : 'none';
+    // בקשה אחת לכל בדיקה: אותה שאילתה גם מגלה אם טבלאות ההרשאות קיימות
+    const table = session && !session.user.is_anonymous ? 'admins' : 'devices';
+    const query = this.client.from(table).select('user_id');
+    const { data, error } = await (session ? query.eq('user_id', session.user.id) : query).limit(1);
+    if (error && /does not exist|not find|schema cache/i.test(error.message)) return 'open';
+    if (!session || !data?.length) return 'none';
+    return table === 'admins' ? 'admin' : 'device';
   }
 
   async approveDevice(deviceUserId: string, name: string): Promise<void> {
@@ -187,6 +194,7 @@ export class SupabaseStore implements DataStore {
   getSession = async (): Promise<Session | null> => (await this.client.auth.getSession()).data.session;
 
   async reload(): Promise<void> {
+    this.lastReload = Date.now();
     const results = await Promise.all(TABLES.map((table) => this.client.from(table).select('*')));
     const next = { ...EMPTY } as Record<TableName, unknown[]>;
     results.forEach(({ data, error }, i) => {

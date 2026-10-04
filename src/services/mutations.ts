@@ -95,7 +95,7 @@ export async function addPhotos(files: File[]): Promise<number> {
 /** חיפוש קואורדינטות לעיר, דרך שירות הגאוקודינג החינמי של Open-Meteo. */
 export async function geocodeCity(city: string): Promise<{ name: string; latitude: number; longitude: number } | null> {
   const params = new URLSearchParams({ name: city, count: '1', language: 'he' });
-  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`, { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) return null;
   const data = (await response.json()) as { results?: { name: string; latitude: number; longitude: number }[] };
   return data.results?.[0] ?? null;
