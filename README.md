@@ -10,6 +10,7 @@ npm run dev
 ```
 
 - המסך: http://localhost:5180/dashboard
+- הטאבלט המשפחתי: http://localhost:5180/kids (מכשיר משותף: כל ילד נוגע בתמונה שלו ומסמן הכנות ומשימות)
 - המסך של הילד: http://localhost:5180/kid (במצב מקומי בוחרים ילד; אפשר גם `/kid?member=alma`)
 - הניהול: http://localhost:5180/admin (קוד פתיחה: `1234`, מחליפים בהגדרות)
 - מצב בוקר ויום הולדת לבדיקה: `?time=07:17&mode=morning`, `?date=2026-10-29`
@@ -65,6 +66,7 @@ docs/
 2. `docs/supabase-002-viewer-access.sql`: מנהלים ומסכים מאושרים (חיבור ב-QR).
 3. `docs/supabase-003-features.sql`: רשימת קניות, מצב בוקר, מסך הילד, כוכבים ובקשות כריך.
 4. `docs/supabase-004-evening-rewards.sql`: מצב ערב (הכנות לכל ילד), פרסים, סיכום שבועי והודעות למסך.
+5. `docs/supabase-005-family-tablet.sql`: הטאבלט המשפחתי (ציור לכל הכנה, רשימות בוקר, סוג מכשיר משותף).
 
 ## הרשאות וחיבור מסכים
 

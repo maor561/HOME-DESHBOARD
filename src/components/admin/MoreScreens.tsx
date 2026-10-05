@@ -8,6 +8,7 @@ import type { Birthday, DailyQuote, FamilyMember } from '../../types';
 import { Avatar, Button, Field, IconButton, LinkRow, ListRow, Panel, Picker, ScreenHeader, Select, Sheet, SheetActions, SheetLabel, Tag, TextInput, Toggle, toast } from '../ui';
 import { MEMBER_COLORS, useFamily, type ScreenProps } from './shared';
 
+const FACES = ['🦖', '🦄', '🐱', '⚽', '🚀', '🐶', '🦋', '🦁', '🐼', '🌈'];
 const formatBirth = (iso: string | null) => (iso ? iso.split('-').reverse().map(Number).join('.') : 'ללא תאריך');
 const Swatch = ({ color }: { color: string }) => <span className="block size-5 rounded-full" style={{ background: color }} />;
 
@@ -70,6 +71,7 @@ export function FamilyScreen({ go }: ScreenProps) {
           <TextInput value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
           <SheetLabel>תאריך לידה</SheetLabel>
           <TextInput type="date" value={draft.birthDate ?? ''} onChange={(e) => setDraft({ ...draft, birthDate: e.target.value || null })} />
+          <Picker label="תמונה בטאבלט המשפחתי" value={draft.icon ?? ''} options={[['', 'אות'], ...FACES.map((e): [string, string] => [e, e])]} onChange={(face) => setDraft({ ...draft, icon: face || null })} />
           <Picker label="צבע" value={draft.color} options={MEMBER_COLORS.map((c) => [c, <Swatch color={c} />])} onChange={(color) => setDraft({ ...draft, color })} />
           <div className="mt-3 flex items-center gap-3">
             <span className="flex-1"><b className="block">כריך לבית הספר</b><small className="text-sm text-soft">יופיע בתפריט השבועי</small></span>

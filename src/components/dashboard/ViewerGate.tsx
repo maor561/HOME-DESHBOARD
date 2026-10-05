@@ -42,7 +42,7 @@ function Screen({ children }: { children: ReactNode }) {
  * שער הצפייה במצב ענן. מסך שעוד לא אושר מציג קוד QR; סורקים אותו בטלפון,
  * מתחברים שם ומאשרים, והמסך נפתח לבד. כך אין צורך להקליד סיסמה בטלוויזיה.
  */
-export function ViewerGate({ children, kind = 'screen' }: { children: ReactNode; kind?: 'screen' | 'kid' }) {
+export function ViewerGate({ children, kind = 'screen' }: { children: ReactNode; kind?: 'screen' | 'kid' | 'shared' }) {
   const cloud = store as SupabaseStore;
   const [access, setAccess] = useState<Access | 'loading' | 'error'>('loading');
   const [userId, setUserId] = useState('');
@@ -98,15 +98,15 @@ export function ViewerGate({ children, kind = 'screen' }: { children: ReactNode;
     );
   }
 
-  const url = `${window.location.origin}/admin?pair=${userId}${kind === 'kid' ? '&kind=kid' : ''}`;
+  const url = `${window.location.origin}/admin?pair=${userId}${kind === 'screen' ? '' : `&kind=${kind}`}`;
   return (
     <Screen>
       <div className="flex flex-wrap items-center justify-center gap-[6vmin]">
         <div className="size-[46vmin]"><QrCode value={url} /></div>
         <div className="max-w-[60vmin] text-start">
-          <h1 className="font-serif text-[7vmin] font-bold leading-tight">{kind === 'kid' ? 'חיבור המסך שלי' : 'חיבור המסך'}</h1>
+          <h1 className="font-serif text-[7vmin] font-bold leading-tight">{kind === 'kid' ? 'חיבור המסך שלי' : kind === 'shared' ? 'חיבור הטאבלט המשפחתי' : 'חיבור המסך'}</h1>
           <ol className="mt-[2.5vmin] list-decimal ps-[4vmin] text-[3.2vmin] leading-relaxed opacity-90">
-            <li>{kind === 'kid' ? 'אבא או אמא סורקים את הקוד בטלפון שלהם' : 'סרקו את הקוד במצלמת הטלפון'}</li>
+            <li>{kind === 'screen' ? 'סרקו את הקוד במצלמת הטלפון' : 'אבא או אמא סורקים את הקוד בטלפון שלהם'}</li>
             <li>התחברו עם המייל והסיסמה</li>
             <li>ודאו שהקוד זהה ואשרו</li>
           </ol>

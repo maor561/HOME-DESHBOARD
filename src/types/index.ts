@@ -119,6 +119,10 @@ export interface RoutineItem {
   familyId: ID;
   memberId: ID;
   text: string;
+  /** ציור שמופיע ליד הטקסט, בשביל מי שעוד לא קורא */
+  icon: string;
+  /** רשימת ערב ("מתכוננים למחר") או רשימת בוקר */
+  period: 'evening' | 'morning';
   sortOrder: number;
 }
 

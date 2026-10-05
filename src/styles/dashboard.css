@@ -366,4 +366,5 @@ svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width
 @keyframes msgin { from { transform: translateY(160%); } }
 @keyframes msgbar { to { transform: scaleX(0); } }
 
+.ck-e { font-size: 1.15em; line-height: 1; text-decoration: none; display: inline-block; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }

@@ -173,11 +173,12 @@ export class SupabaseStore implements DataStore {
     return table === 'admins' ? 'admin' : 'device';
   }
 
-  async approveDevice(deviceUserId: string, name: string, memberId: string | null = null): Promise<void> {
+  async approveDevice(deviceUserId: string, name: string, memberId: string | null = null, kind: 'screen' | 'kid' | 'shared' = 'screen'): Promise<void> {
     const session = await this.getSession();
     const row: Json = { user_id: deviceUserId, name, approved_by: session?.user.id };
-    // העמודה קיימת רק אחרי סקריפט העדכון השלישי; למסך הבית לא שולחים אותה כלל
+    // העמודות האלה נוספו בסקריפטים מאוחרים; למסך הבית לא שולחים אותן כלל
     if (memberId) row.member_id = memberId;
+    if (kind !== 'screen') row.kind = kind;
     const { error } = await this.client.from('devices').upsert(row);
     if (error) throw new Error(error.message);
   }

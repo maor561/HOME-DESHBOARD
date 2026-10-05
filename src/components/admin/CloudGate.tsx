@@ -20,7 +20,10 @@ function Frame({ children }: { children: ReactNode }) {
 
 /** מזהה המסך שממתין לאישור, כשהגענו לכאן מסריקת קוד ה-QR שלו. */
 const pendingDevice = () => new URLSearchParams(window.location.search).get('pair');
-const pendingKind = () => (new URLSearchParams(window.location.search).get('kind') === 'kid' ? 'kid' : 'screen');
+const pendingKind = (): 'screen' | 'kid' | 'shared' => {
+  const kind = new URLSearchParams(window.location.search).get('kind');
+  return kind === 'kid' || kind === 'shared' ? kind : 'screen';
+};
 
 /**
  * שער הכניסה ל-Admin במצב ענן: התחברות במייל וסיסמה, אישור מסך שנסרק,
@@ -117,10 +120,11 @@ export function CloudGate({ children }: { children: (signOut: () => void) => Rea
     const sorted = [...db.family_members].sort((a, b) => a.sortOrder - b.sortOrder);
     const candidates = sorted.some((m) => m.hasDevice) ? sorted.filter((m) => m.hasDevice) : sorted;
     const kid = db.family_members.find((m) => m.id === kidId);
-    const approve = () => cloud.approveDevice(device, kind === 'kid' ? `המסך של ${kid?.name}` : 'מסך הבית', kind === 'kid' ? kidId : null);
+    const approve = () =>
+      cloud.approveDevice(device, kind === 'kid' ? `המסך של ${kid?.name}` : kind === 'shared' ? 'הטאבלט המשפחתי' : 'מסך הבית', kind === 'kid' ? kidId : null, kind);
     return (
       <Frame>
-        <h1 className="text-center font-serif text-[30px] font-bold">{kind === 'kid' ? 'חיבור מסך של ילד' : 'לחבר את המסך הזה?'}</h1>
+        <h1 className="text-center font-serif text-[30px] font-bold">{kind === 'kid' ? 'חיבור מסך של ילד' : kind === 'shared' ? 'חיבור הטאבלט המשפחתי' : 'לחבר את המסך הזה?'}</h1>
         <p className="text-center opacity-85">ודאו שזה הקוד שמופיע על המסך:</p>
         <p className="text-center font-serif text-[64px] font-bold leading-none tracking-[0.12em]" dir="ltr">{pairCode(device)}</p>
         {kind === 'kid' && (

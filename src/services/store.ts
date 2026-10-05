@@ -22,6 +22,9 @@ export interface DataStore {
 
 export const TABLES: TableName[] = ['families', 'family_members', 'birthdays', 'activities', 'meals', 'tasks', 'daily_quotes', 'photos', 'events', 'shopping_items', 'meal_requests', 'routine_items', 'routine_checks', 'rewards', 'reward_requests', 'messages', 'star_log', 'settings'];
 
+/** ציור ברירת מחדל להכנות שנוצרו לפני שנוספו הציורים */
+const ROUTINE_ICONS: Record<string, string> = { 'תיק מוכן': '🎒', 'בגדים למחר': '👕', 'מקלחת': '🚿', 'צחצוח שיניים': '🦷' };
+
 export const LOCAL_STORAGE_KEY = 'cohen-dashboard-db-v1';
 const CHANNEL = 'cohen-dashboard-sync';
 
@@ -37,6 +40,7 @@ export function normalize(db: Partial<Database>, seedMissingTables = true): Data
     family_members: full.family_members.map((m) => ({ ...m, hasDevice: m.hasDevice ?? false, stars: m.stars ?? 0 })),
     activities: full.activities.map((a) => ({ ...a, bring: a.bring ?? '' })),
     tasks: full.tasks.map((t) => ({ ...t, stars: t.stars ?? 1 })),
+    routine_items: full.routine_items.map((r) => ({ ...r, icon: r.icon ?? ROUTINE_ICONS[r.text] ?? '✅', period: r.period ?? 'evening' })),
     settings: full.settings.map((s) => {
       const merged = { ...seed.settings[0], ...s, calendar: { ...seed.settings[0].calendar, ...s.calendar } };
       const kept = merged.widgets.filter((w) => WIDGETS.includes(w.key));

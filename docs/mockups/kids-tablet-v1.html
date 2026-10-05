@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>משפחת כהן · סקיצה · הטאבלט המשפחתי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f0e6; --card: #fffdf9; --ink: #1f2a3d; --soft: #6d7686; --faint: #b3b9c2; --line: #ebe2d3; --ok: #2f9e7a; --c: #e2607a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #1b1d27; }
+  body { font: 600 18px/1.35 'Assistant', system-ui, sans-serif; color: var(--ink); }
+  button, input { font: inherit; color: inherit; } button { cursor: pointer; border: 0; background: none; }
+  .tool { display: flex; gap: 6px; padding: 8px 12px; background: #101320; align-items: center; overflow-x: auto; white-space: nowrap; }
+  .tool span { color: #7d85a3; font: 600 13px 'Assistant'; margin-inline-end: 4px; }
+  .tool button { font: 600 13px 'Assistant'; color: #c9cede; background: #1b2033; border: 1px solid #2c3350; border-radius: 8px; padding: 5px 11px; }
+  .tool button[aria-pressed="true"] { background: #ffbd66; border-color: #ffbd66; color: #1a1208; }
+  .app { height: calc(100dvh - 44px); max-width: 1100px; margin: 0 auto; background: var(--bg); overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ---------- מי אני? ---------- */
+  .hello { padding: clamp(18px, 4vw, 36px) clamp(16px, 4vw, 40px) 8px; }
+  .hello h1 { font: 700 clamp(30px, 6vw, 52px)/1.1 'Frank Ruhl Libre', serif; }
+  .hello p { font-size: clamp(18px, 3vw, 24px); color: var(--soft); margin-top: 4px; }
+  .kids { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.4vw, 22px); padding: clamp(12px, 3vw, 28px) clamp(16px, 4vw, 40px) clamp(18px, 4vw, 40px); align-content: center; }
+  .kid { border-radius: 32px; padding: clamp(16px, 3vw, 28px) 16px; color: #fff; text-align: center; min-height: clamp(190px, 30vh, 280px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--c) 80%, #1a1040), var(--c) 60%, color-mix(in srgb, var(--c) 62%, #ffcf8a)); box-shadow: 0 14px 30px color-mix(in srgb, var(--c) 35%, transparent); transition: transform .12s; }
+  .kid:active { transform: scale(.96); }
+  .kid .face { width: clamp(76px, 12vw, 108px); height: clamp(76px, 12vw, 108px); border-radius: 50%; background: rgba(255,255,255,.25); border: 4px solid rgba(255,255,255,.7); display: grid; place-items: center; font-size: clamp(40px, 7vw, 58px); }
+  .kid b { font-size: clamp(30px, 5vw, 42px); font-weight: 800; line-height: 1.1; }
+  .dots { display: flex; gap: 7px; } .dots i { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; } .dots i.on { background: #fff; }
+  .kid small { font-size: 18px; font-weight: 800; background: rgba(0,0,0,.2); border-radius: 99px; padding: 3px 14px; }
+  .kid.ready .face::after { content: '🌙'; position: absolute; }
+  .kid .face { position: relative; } .kid.ready .face::after { inset: auto -8px -8px auto; font-size: 34px; }
+
+  @media (min-width: 900px) { .kids { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  /* ---------- המסך של ילד ---------- */
+  .top { display: flex; align-items: center; gap: 14px; padding: 16px clamp(16px, 4vw, 40px); color: #fff; border-radius: 0 0 32px 32px;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--c) 80%, #1a1040), var(--c) 60%, color-mix(in srgb, var(--c) 62%, #ffcf8a)); }
+  .back { height: 64px; padding: 0 22px; border-radius: 22px; background: rgba(255,255,255,.25); color: #fff; font-size: 22px; font-weight: 800; }
+  .top .face { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.25); border: 3px solid rgba(255,255,255,.7); display: grid; place-items: center; font-size: 34px; flex: none; }
+  .top h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 'Frank Ruhl Libre', serif; flex: 1; }
+  .top .stars { font-size: 24px; font-weight: 800; background: rgba(0,0,0,.2); border-radius: 99px; padding: 6px 18px; white-space: nowrap; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px clamp(16px, 4vw, 40px) 4px; }
+  .tabs button { height: 72px; border-radius: 24px; background: var(--card); font-size: clamp(20px, 3.4vw, 26px); font-weight: 800; box-shadow: 0 2px 0 var(--line); border: 4px solid transparent; }
+  .tabs button[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, white); color: var(--c); }
+  .track { margin: 14px clamp(16px, 4vw, 40px) 4px; height: 22px; border-radius: 99px; background: var(--line); position: relative; }
+  .track i { position: absolute; inset: 0 0 0 auto; border-radius: 99px; background: var(--ok); transition: width .5s; }
+  .track b { position: absolute; top: 50%; font-size: 34px; transform: translate(50%, -50%); transition: right .5s; }
+  .list { padding: 10px clamp(16px, 4vw, 40px) 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 14px; }
+  .item { display: flex; align-items: center; gap: 16px; min-height: 104px; padding: 14px 18px; border-radius: 28px; background: var(--card); text-align: start; box-shadow: 0 3px 0 var(--line), 0 10px 24px rgba(60,40,10,.06); border: 4px solid transparent; transition: transform .12s, background .2s; }
+  .item:active { transform: scale(.97); }
+  .item .pic { width: 76px; height: 76px; border-radius: 24px; background: color-mix(in srgb, var(--c) 14%, white); display: grid; place-items: center; font-size: 46px; flex: none; }
+  .item .txt { flex: 1; min-width: 0; font-size: clamp(24px, 4vw, 30px); font-weight: 800; line-height: 1.2; }
+  .item .txt small { display: block; font-size: 17px; font-weight: 700; color: var(--soft); }
+  .item .chk { width: 60px; height: 60px; border-radius: 50%; border: 5px solid var(--faint); display: grid; place-items: center; font-size: 34px; color: transparent; flex: none; transition: all .2s; }
+  .item.done { background: #e8f6ef; border-color: var(--ok); }
+  .item.done .chk { background: var(--ok); border-color: var(--ok); color: #fff; animation: pop .35s; }
+  .item.done .txt { color: #2c6f58; }
+  @keyframes pop { 50% { transform: scale(1.3); } }
+  .win { margin: 6px clamp(16px, 4vw, 40px) 0; border-radius: 28px; padding: 20px; text-align: center; background: linear-gradient(150deg, #1b2650, #3a2f6b); color: #fff; font: 700 clamp(26px, 4.6vw, 36px) 'Frank Ruhl Libre', serif; }
+  .win small { display: block; font: 700 18px 'Assistant'; opacity: .85; margin-top: 4px; }
+
+  /* ---------- עריכה ב-Admin ---------- */
+  .admin { max-width: 430px; margin: 0 auto; padding: 18px 16px 30px; font-size: 16px; font-weight: 500; }
+  .admin h1 { font: 700 28px 'Frank Ruhl Libre', serif; } .admin p { color: var(--soft); font-size: 15px; margin: 2px 0 14px; }
+  .box { background: var(--card); border-radius: 20px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 0 var(--line); }
+  .box h2 { font: 700 13px 'Assistant'; letter-spacing: .1em; color: var(--soft); margin-bottom: 10px; }
+  .pick { display: flex; flex-wrap: wrap; gap: 7px; } .pick button { min-width: 46px; height: 44px; padding: 0 13px; border-radius: 13px; background: var(--bg); font-weight: 700; border: 2px solid transparent; font-size: 16px; }
+  .pick button[aria-pressed="true"] { border-color: #c2501c; background: #fbe6d8; }
+  .arow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-weight: 700; } .arow:first-of-type { border: 0; }
+  .arow .e { width: 42px; height: 42px; border-radius: 13px; background: #fbe6d8; display: grid; place-items: center; font-size: 24px; } .arow span { flex: 1; } .arow button { color: #c93c3c; font-size: 14px; font-weight: 700; }
+  .in { flex: 1; min-width: 0; height: 46px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; padding: 0 13px; font-weight: 600; }
+  .btn { height: 46px; border-radius: 14px; background: #c2501c; color: #fff; font-weight: 700; padding: 0 16px; }
+  .lbl { font-size: 13px; font-weight: 700; color: var(--soft); margin: 12px 0 6px; }
+</style>
+</head>
+<body>
+<div class="tool" role="toolbar" aria-label="פקדי הסקיצה"><span>סקיצה:</span>
+  <button data-view="tablet">הטאבלט המשפחתי</button><button data-view="admin">עריכת ההכנות ב-Admin</button>
+  <span style="margin-inline-start:14px">שעה:</span><button data-time="eve">ערב</button><button data-time="morning">בוקר</button></div>
+<div class="app" id="app"></div>
+
+<script>
+// נתוני דוגמה בלבד
+const KIDS = [
+  { id: 'alma', name: 'אלמה', face: '🦄', c: '#e2607a', stars: 12 },
+  { id: 'gaya', name: 'גאיה', face: '🐱', c: '#8a63d2', stars: 9 },
+  { id: 'eylon', name: 'אילון', face: '⚽', c: '#3f8fdc', stars: 5 },
+  { id: 'neri', name: 'נרי', face: '🦖', c: '#e08a1a', stars: 3 },
+];
+const mk = rows => rows.map(([e, t, done, sub]) => ({ e, t, done: !!done, sub }));
+const DATA = {
+  alma: { eve: mk([['🎒', 'תיק מוכן', 1], ['👕', 'בגדים למחר', 1], ['🚿', 'מקלחת', 1], ['🦷', 'צחצוח שיניים', 1]]), morning: mk([['🛏️', 'לסדר את המיטה', 1], ['🦷', 'צחצוח שיניים'], ['👟', 'נעליים']]), tasks: mk([['📚', 'לקרוא 20 דקות', 0, '⭐ 1'], ['🧹', 'לסדר את החדר', 0, '⭐ 2']]) },
+  gaya: { eve: mk([['🎒', 'תיק מוכן', 1], ['👕', 'בגדים למחר', 1], ['🚿', 'מקלחת'], ['🦷', 'צחצוח שיניים']]), morning: mk([['🛏️', 'לסדר את המיטה'], ['🦷', 'צחצוח שיניים'], ['👟', 'נעליים']]), tasks: mk([['🐱', 'להאכיל את החתול', 1, '⭐ 1']]) },
+  eylon: { eve: mk([['🎒', 'תיק מוכן', 1], ['🚿', 'מקלחת'], ['🦷', 'צחצוח שיניים'], ['📖', 'סיפור לפני השינה']]), morning: mk([['🦷', 'צחצוח שיניים'], ['👟', 'נעליים']]), tasks: mk([['🐟', 'להאכיל את הדגים', 0, '⭐ 1']]) },
+  neri: { eve: mk([['🚿', 'מקלחת'], ['🦷', 'צחצוח שיניים'], ['🧸', 'לאסוף צעצועים']]), morning: mk([['🦷', 'צחצוח שיניים'], ['👟', 'נעליים']]), tasks: [] },
+};
+const S = { view: 'tablet', time: 'eve', kid: null, tab: 'routine' };
+const app = document.getElementById('app');
+const routine = k => DATA[k.id][S.time];
+const count = list => list.filter(i => i.done).length;
+
+function who() {
+  return `<div class="hello"><h1>${S.time === 'eve' ? 'ערב טוב! מי מתכונן למחר?' : 'בוקר טוב! מי מוכן לצאת?'}</h1><p>נוגעים בתמונה שלך</p></div>
+    <div class="kids">${KIDS.map(k => { const r = routine(k), n = count(r); return `<button class="kid ${r.length && n === r.length ? 'ready' : ''}" style="--c:${k.c}" data-kid="${k.id}" aria-label="${k.name}">
+      <span class="face">${k.face}</span><b>${k.name}</b><span class="dots">${r.map(i => `<i class="${i.done ? 'on' : ''}"></i>`).join('')}</span><small>⭐ ${k.stars}</small></button>`; }).join('')}</div>`;
+}
+function kidScreen(k) {
+  const list = S.tab === 'routine' ? routine(k) : DATA[k.id].tasks, n = count(list), pct = list.length ? Math.round(n / list.length * 100) : 0;
+  return `<div class="top"><button class="back" data-back>‹ כולם</button><span class="face">${k.face}</span><h1>${k.name}</h1><span class="stars">⭐ ${k.stars}</span></div>
+    <div class="tabs"><button data-tab="routine" aria-pressed="${S.tab === 'routine'}">${S.time === 'eve' ? '🌙 מתכוננים למחר' : '☀️ מתכוננים לבוקר'}</button><button data-tab="tasks" aria-pressed="${S.tab === 'tasks'}">⭐ המשימות שלי</button></div>
+    ${list.length ? `<div class="track"><i style="width:${pct}%"></i><b style="right:${pct}%">${S.tab === 'routine' ? (S.time === 'eve' ? '🌙' : '☀️') : '⭐'}</b></div>` : ''}
+    ${list.length && n === list.length ? `<div class="win">כל הכבוד, ${k.name}!<small>${S.tab === 'routine' ? 'הכול מוכן' : 'סיימת את כל המשימות'}</small></div>` : ''}
+    <div class="list">${list.length ? list.map((i, x) => `<button class="item ${i.done ? 'done' : ''}" data-item="${x}" aria-pressed="${i.done}">
+      <span class="pic">${i.e}</span><span class="txt">${i.t}${i.sub ? `<small>${i.sub}</small>` : ''}</span><span class="chk">✓</span></button>`).join('') : '<p style="font-size:24px;color:var(--soft);padding:20px 4px">אין משימות להיום 🎉</p>'}</div>`;
+}
+function admin() {
+  return `<div class="admin"><h1>מצב ערב</h1><p>ההכנות של כל ילד. הציור והטקסט מופיעים בטאבלט ובמסך בבית.</p>
+    <div class="box"><h2>ההכנות של</h2><div class="pick">${KIDS.map((k, i) => `<button aria-pressed="${i === 3}">${k.name}</button>`).join('')}</div>
+      <div style="margin-top:10px">${DATA.neri.eve.map(i => `<div class="arow"><span class="e">${i.e}</span><span>${i.t}</span><button>הסרה</button></div>`).join('')}</div>
+      <div class="lbl">הכנה חדשה</div><div style="display:flex;gap:8px"><input class="in" placeholder="למשל: לשתות מים"><button class="btn">הוספה</button></div>
+      <div class="lbl">ציור</div><div class="pick">${['🦷', '🚿', '🎒', '👕', '🧸', '📖', '🛏️', '👟', '💧', '🧴', '🥛', '🎹'].map((e, i) => `<button aria-pressed="${!i}">${e}</button>`).join('')}</div></div>
+    <div class="box"><h2>התמונה של הילד בטאבלט</h2><div class="pick">${['🦖', '🦄', '🐱', '⚽', '🚀', '🐶', '🦋', '🦁'].map((e, i) => `<button aria-pressed="${!i}">${e}</button>`).join('')}</div>
+      <div class="lbl">גם בבוקר</div><p style="margin:0">אפשר להגדיר לכל ילד רשימה נפרדת לבוקר (נעליים, שיניים, לסדר מיטה).</p></div></div>`;
+}
+function render() {
+  app.innerHTML = S.view === 'admin' ? admin() : S.kid ? kidScreen(KIDS.find(k => k.id === S.kid)) : who();
+  if (S.kid) app.style.setProperty('--c', KIDS.find(k => k.id === S.kid).c);
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
+  document.querySelectorAll('[data-time]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.time === S.time)));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.view) { S.view = d.view; S.kid = null; }
+  if (d.time) S.time = d.time;
+  if (d.kid) { S.kid = d.kid; S.tab = 'routine'; }
+  if ('back' in d) S.kid = null;
+  if (d.tab) S.tab = d.tab;
+  if (d.item !== undefined) { const k = KIDS.find(k => k.id === S.kid), list = S.tab === 'routine' ? routine(k) : DATA[k.id].tasks, it = list[d.item]; it.done = !it.done; if (S.tab === 'tasks') k.stars += it.done ? 1 : -1; }
+  render();
+});
+render();
+</script>
+</body>
+</html>

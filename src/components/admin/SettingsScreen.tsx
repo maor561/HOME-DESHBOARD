@@ -1,11 +1,11 @@
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { DEFAULT_ROUTINE, FAMILY_ID } from '../../data/seed';
+import { DEFAULT_MORNING, DEFAULT_ROUTINE, FAMILY_ID } from '../../data/seed';
 import { geocodeCity, uid, updateSettings } from '../../services/mutations';
 import { store } from '../../services/store';
 import type { PairedDevice, SupabaseStore } from '../../services/supabaseStore';
 import type { DashboardStyle, WidgetKey } from '../../types';
-import { Button, Field, IconButton, ListRow, Panel, Picker, ScreenHeader, Select, TextInput, Toggle, toast, useDraft } from '../ui';
+import { Button, Field, IconButton, ListRow, Panel, Picker, ScreenHeader, Segmented, Select, TextInput, Toggle, toast, useDraft } from '../ui';
 import { useFamily, type ScreenProps } from './shared';
 
 const WIDGET_LABEL: Record<WidgetKey, string> = {
@@ -33,36 +33,44 @@ function StylePreview({ style }: { style: DashboardStyle }) {
   );
 }
 
-/** ההכנות של כל ילד לשגרת הערב. לכל ילד רשימה משלו. */
+const ROUTINE_ICONS = ['🦷', '🚿', '🎒', '👕', '🧸', '📖', '🛏️', '👟', '💧', '🧴', '🥛', '🎹'];
+
+/** ההכנות של כל ילד, לערב ולבוקר. לכל ילד רשימה משלו, ולכל הכנה ציור. */
 function RoutineEditor() {
   const { db, members } = useFamily();
   const kids = members.filter((m) => m.getsSandwich || db.routine_items.some((item) => item.memberId === m.id));
   const [kidId, setKidId] = useState(kids[0]?.id ?? '');
+  const [period, setPeriod] = useState<'evening' | 'morning'>('evening');
   const [text, setText] = useState('');
-  const items = db.routine_items.filter((item) => item.memberId === kidId).sort((a, b) => a.sortOrder - b.sortOrder);
+  const [icon, setIcon] = useState(ROUTINE_ICONS[0]);
+  const items = db.routine_items.filter((item) => item.memberId === kidId && item.period === period).sort((a, b) => a.sortOrder - b.sortOrder);
+  const defaults = period === 'evening' ? DEFAULT_ROUTINE : DEFAULT_MORNING;
 
-  const add = async (value: string, order = items.length) => {
+  const add = async (value: string, picture: string, order = items.length) => {
     if (!value.trim() || !kidId) return;
-    await store.upsert('routine_items', { id: uid(), familyId: FAMILY_ID, memberId: kidId, text: value.trim(), sortOrder: order });
+    await store.upsert('routine_items', { id: uid(), familyId: FAMILY_ID, memberId: kidId, text: value.trim(), icon: picture, period, sortOrder: order });
   };
 
   return (
     <div className="py-2.5">
       <Picker label="ההכנות של" value={kidId} options={kids.map((m) => [m.id, m.name])} onChange={setKidId} />
+      <div className="mt-2.5"><Segmented value={period} options={[['evening', '🌙 ערב'], ['morning', '☀️ בוקר']]} onChange={setPeriod} /></div>
       <div className="mt-2 divide-y divide-line">
         {items.map((item) => (
           <div key={item.id} className="flex min-h-[46px] items-center gap-2 py-1">
+            <span className="grid size-10 flex-none place-items-center rounded-xl bg-accent-soft text-[22px]">{item.icon}</span>
             <b className="flex-1">{item.text}</b>
             <IconButton label={`הסרת ${item.text}`} danger onClick={() => store.remove('routine_items', item.id)}><Trash2 className="size-5" /></IconButton>
           </div>
         ))}
       </div>
       {!items.length && (
-        <Button variant="ghost" wide className="mt-1 h-11 text-sm" onClick={async () => { for (const [i, value] of DEFAULT_ROUTINE.entries()) await add(value, i); }}>
+        <Button variant="ghost" wide className="mt-1 h-11 text-sm" onClick={async () => { for (const [i, value] of defaults.entries()) await add(value.text, value.icon, i); }}>
           להתחיל מרשימה מוכנה
         </Button>
       )}
-      <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); void add(text).then(() => setText('')); }}>
+      <Picker label="ציור להכנה חדשה" value={icon} options={ROUTINE_ICONS.map((e) => [e, e])} onChange={setIcon} />
+      <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); void add(text, icon).then(() => setText('')); }}>
         <TextInput value={text} placeholder="הכנה נוספת" aria-label="הכנה נוספת" onChange={(e) => setText(e.target.value)} />
         <Button className="h-[46px] px-3.5 text-sm" disabled={!text.trim()}>הוספה</Button>
       </form>

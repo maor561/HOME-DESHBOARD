@@ -4,7 +4,12 @@ import type { Database, Meal, WidgetKey } from '../types';
 export const FAMILY_ID = 'cohen';
 
 /** רשימת הכנות התחלתית לערב; כל ילד מקבל עותק שאפשר לשנות */
-export const DEFAULT_ROUTINE = ['תיק מוכן', 'בגדים למחר', 'מקלחת', 'צחצוח שיניים'];
+export const DEFAULT_ROUTINE: { icon: string; text: string }[] = [
+  { icon: '🎒', text: 'תיק מוכן' }, { icon: '👕', text: 'בגדים למחר' }, { icon: '🚿', text: 'מקלחת' }, { icon: '🦷', text: 'צחצוח שיניים' },
+];
+export const DEFAULT_MORNING: { icon: string; text: string }[] = [
+  { icon: '🛏️', text: 'לסדר את המיטה' }, { icon: '🦷', text: 'צחצוח שיניים' }, { icon: '👟', text: 'נעליים' },
+];
 
 export const WIDGETS: WidgetKey[] = ['weather', 'sun', 'calendar', 'sandwiches', 'meals', 'activities', 'tasks', 'birthdays', 'photos', 'quote'];
 
@@ -79,7 +84,7 @@ export function createSeed(today = new Date()): Database {
     shopping_items: [],
     meal_requests: [],
     routine_items: kids.flatMap((memberId) =>
-      DEFAULT_ROUTINE.map((text, sortOrder) => ({ id: `routine-${memberId}-${sortOrder}`, familyId: FAMILY_ID, memberId, text, sortOrder })),
+      DEFAULT_ROUTINE.map((item, sortOrder) => ({ id: `routine-${memberId}-${sortOrder}`, familyId: FAMILY_ID, memberId, ...item, period: 'evening' as const, sortOrder })),
     ),
     routine_checks: [],
     rewards: [],

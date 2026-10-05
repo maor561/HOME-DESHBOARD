@@ -56,6 +56,7 @@ export function EveningLayout({ model }: { model: DashboardModel }) {
                 {kid.items.map((item) => (
                   <div className={`ck ${item.done ? 'done' : ''}`} key={item.id}>
                     <span className="box"><Check className="ic" aria-hidden="true" /></span>
+                    <span className="ck-e">{item.icon}</span>
                     {item.text}
                   </div>
                 ))}

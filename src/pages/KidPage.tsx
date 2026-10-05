@@ -109,7 +109,7 @@ function KidApp({ member, db }: { member: FamilyMember; db: Database }) {
   const doneCount = todayTasks.filter((t) => t.done).length;
 
   // שגרת הערב: מוצגת בשעות ובערבים שבהגדרות
-  const routine = db.routine_items.filter((item) => item.memberId === member.id).sort((a, b) => a.sortOrder - b.sortOrder);
+  const routine = db.routine_items.filter((item) => item.memberId === member.id && item.period === 'evening').sort((a, b) => a.sortOrder - b.sortOrder);
   const checked = (itemId: string) => db.routine_checks.some((c) => c.itemId === itemId && c.date === today);
   const { evening } = settings;
   const inEvening =
@@ -154,6 +154,7 @@ function KidApp({ member, db }: { member: FamilyMember; db: Database }) {
                         className={`grid size-[34px] flex-none place-items-center rounded-xl border-[2.5px] ${done ? 'border-ok bg-ok text-white' : 'border-white/60 text-transparent'}`}>
                         <Check className="size-5" strokeWidth={3} />
                       </button>
+                      <span className="text-2xl">{item.icon}</span>
                       <b className={`text-[17px] ${done ? 'font-medium text-white/50 line-through' : ''}`}>{item.text}</b>
                     </div>
                   );

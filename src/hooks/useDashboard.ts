@@ -45,7 +45,7 @@ export interface MorningKid {
 
 export interface EveningKid {
   member: FamilyMember;
-  items: { id: string; text: string; done: boolean }[];
+  items: { id: string; icon: string; text: string; done: boolean }[];
   ready: boolean;
   sandwich: string;
   bring: string;
@@ -183,9 +183,9 @@ export function useDashboard(): DashboardModel {
     const eveningKids: EveningKid[] = members
       .map((member) => {
         const items = db.routine_items
-          .filter((item) => item.memberId === member.id)
+          .filter((item) => item.memberId === member.id && item.period === 'evening')
           .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((item) => ({ id: item.id, text: item.text, done: db.routine_checks.some((c) => c.itemId === item.id && c.date === today) }));
+          .map((item) => ({ id: item.id, icon: item.icon, text: item.text, done: db.routine_checks.some((c) => c.itemId === item.id && c.date === today) }));
         return {
           member,
           items,

@@ -7,6 +7,7 @@ import { toISODate } from './lib/dates';
 import { AdminPage } from './pages/AdminPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { KidPage } from './pages/KidPage';
+import { TabletPage } from './pages/TabletPage';
 import { rolloverTasks } from './services/mutations';
 import { store } from './services/store';
 
@@ -22,6 +23,7 @@ export function App() {
   }, [today]);
 
   if (path.startsWith('/admin')) return <AdminPage />;
+  if (path.startsWith('/kids')) return <TabletPage />;
   if (path.startsWith('/kid')) return <KidPage />;
   // בענן הצפייה מותנית בחיבור המסך (קוד QR); במצב מקומי המסך פתוח
   return store.mode === 'cloud' ? <ViewerGate><Dashboard hasData={db.settings.length > 0} /></ViewerGate> : <DashboardPage />;

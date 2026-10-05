@@ -182,7 +182,7 @@ async function kidAction(name: string, args: Record<string, unknown>, direct: ()
   if (session && !session.user.is_anonymous) return direct();
   const { error } = await store_.client.rpc(name, args);
   if (!error) return store_.reload();
-  if (/not a kid device/i.test(error.message)) return direct();
+  if (/not a (kid|shared) device/i.test(error.message)) return direct();
   throw new Error(error.message);
 }
 
@@ -196,6 +196,16 @@ export function kidAddShopping(text: string, memberId: ID): Promise<void> {
 
 export function kidToggleRoutine(item: RoutineItem, date: ISODate): Promise<void> {
   return kidAction('kid_toggle_routine', { p_item: item.id, p_date: date }, () => toggleRoutine(item, date));
+}
+
+/* ---------- הטאבלט המשפחתי: מכשיר משותף שבו כל ילד מסמן את שלו ---------- */
+
+export function tabletToggleRoutine(item: RoutineItem, date: ISODate): Promise<void> {
+  return kidAction('tablet_toggle_routine', { p_item: item.id, p_date: date }, () => toggleRoutine(item, date));
+}
+
+export function tabletToggleTask(task: Task): Promise<void> {
+  return kidAction('tablet_toggle_task', { p_task: task.id }, () => toggleTask(task));
 }
 
 export function kidRequestReward(member: FamilyMember, reward: Reward): Promise<void> {
