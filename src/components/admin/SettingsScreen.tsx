@@ -1,11 +1,11 @@
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { DEFAULT_MORNING, DEFAULT_ROUTINE, FAMILY_ID } from '../../data/seed';
-import { geocodeCity, uid, updateSettings } from '../../services/mutations';
+import { copyRoutine, geocodeCity, uid, updateSettings } from '../../services/mutations';
 import { store } from '../../services/store';
 import type { PairedDevice, SupabaseStore } from '../../services/supabaseStore';
 import type { DashboardStyle, WidgetKey } from '../../types';
-import { Button, Field, IconButton, ListRow, Panel, Picker, ScreenHeader, Segmented, Select, TextInput, Toggle, toast, useDraft } from '../ui';
+import { Button, Field, IconButton, ListRow, Panel, Picker, ScreenHeader, Segmented, Select, Sheet, SheetActions, TextInput, Toggle, toast, useDraft } from '../ui';
 import { useFamily, type ScreenProps } from './shared';
 
 const WIDGET_LABEL: Record<WidgetKey, string> = {
@@ -43,6 +43,17 @@ function RoutineEditor() {
   const [period, setPeriod] = useState<'evening' | 'morning'>('evening');
   const [text, setText] = useState('');
   const [icon, setIcon] = useState(ROUTINE_ICONS[0]);
+  // שכפול הרשימות של הילד הנבחר לילדים אחרים
+  const [copying, setCopying] = useState<{ targets: string[]; scope: 'both' | 'evening' | 'morning' } | null>(null);
+  const kidName = kids.find((m) => m.id === kidId)?.name ?? '';
+  const others = kids.filter((m) => m.id !== kidId);
+  const hasAny = db.routine_items.some((item) => item.memberId === kidId);
+  const runCopy = async () => {
+    if (!copying) return;
+    const count = await copyRoutine(db, kidId, copying.targets, copying.scope === 'both' ? ['evening', 'morning'] : [copying.scope]);
+    setCopying(null);
+    toast(count ? `הרשימות של ${kidName} שוכפלו` : `ל${kidName} אין הכנות לשכפל`);
+  };
   const items = db.routine_items.filter((item) => item.memberId === kidId && item.period === period).sort((a, b) => a.sortOrder - b.sortOrder);
   const defaults = period === 'evening' ? DEFAULT_ROUTINE : DEFAULT_MORNING;
 
@@ -68,6 +79,22 @@ function RoutineEditor() {
         <Button variant="ghost" wide className="mt-1 h-11 text-sm" onClick={async () => { for (const [i, value] of defaults.entries()) await add(value.text, value.icon, i); }}>
           להתחיל מרשימה מוכנה
         </Button>
+      )}
+      {hasAny && others.length > 0 && (
+        <Button variant="ghost" wide className="mt-2 h-11 text-sm" onClick={() => setCopying({ targets: others.map((m) => m.id), scope: 'both' })}>
+          שכפול הרשימות של {kidName} לילדים אחרים
+        </Button>
+      )}
+      {copying && (
+        <Sheet title={`שכפול הרשימות של ${kidName}`} onClose={() => setCopying(null)}>
+          <Picker label="לאילו ילדים" value={copying.targets} options={others.map((m) => [m.id, m.name])}
+            onChange={(id) => setCopying({ ...copying, targets: copying.targets.includes(id) ? copying.targets.filter((t) => t !== id) : [...copying.targets, id] })} />
+          <Picker label="מה לשכפל" value={copying.scope} options={[['both', 'ערב ובוקר'], ['evening', 'רק ערב'], ['morning', 'רק בוקר']]} onChange={(scope) => setCopying({ ...copying, scope })} />
+          <p className="mt-3 rounded-2xl bg-[#fff4d6] px-3.5 py-3 text-[15px] font-semibold">
+            הרשימות הקיימות של הילדים שנבחרו יוחלפו ברשימות של {kidName}. אחרי השכפול אפשר לשנות לכל ילד בנפרד.
+          </p>
+          <SheetActions onCancel={() => setCopying(null)} onSave={runCopy} saveLabel="שכפול" disabled={!copying.targets.length} />
+        </Sheet>
       )}
       <Picker label="ציור להכנה חדשה" value={icon} options={ROUTINE_ICONS.map((e) => [e, e])} onChange={setIcon} />
       <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); void add(text, icon).then(() => setText('')); }}>

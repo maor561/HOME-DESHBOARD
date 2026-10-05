@@ -59,6 +59,26 @@ export function toggleRoutine(item: RoutineItem, date: ISODate): Promise<void> {
   return exists ? store.remove('routine_checks', id) : store.upsert('routine_checks', { id, familyId: FAMILY_ID, itemId: item.id, memberId: item.memberId, date });
 }
 
+/**
+ * שכפול רשימות ההכנות מילד אחד לילדים אחרים. הרשימה הקיימת של כל ילד יעד, בתקופות שנבחרו,
+ * מוחלפת ברשימה המועתקת. מחזיר כמה הכנות נוצרו.
+ */
+export async function copyRoutine(db: Database, fromId: ID, toIds: ID[], periods: RoutineItem['period'][]): Promise<number> {
+  const source = db.routine_items.filter((item) => item.memberId === fromId && periods.includes(item.period)).sort((a, b) => a.sortOrder - b.sortOrder);
+  let created = 0;
+  for (const memberId of toIds) {
+    for (const old of db.routine_items.filter((item) => item.memberId === memberId && periods.includes(item.period))) {
+      for (const check of db.routine_checks.filter((c) => c.itemId === old.id)) await store.remove('routine_checks', check.id);
+      await store.remove('routine_items', old.id);
+    }
+    for (const item of source) {
+      await store.upsert('routine_items', { ...item, id: uid(), memberId });
+      created++;
+    }
+  }
+  return created;
+}
+
 /* ---------- פרסים ---------- */
 
 /** תשובה לבקשת פרס. באישור הכוכבים יורדים מהחשבון של הילד. */

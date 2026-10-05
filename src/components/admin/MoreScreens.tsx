@@ -78,7 +78,7 @@ export function FamilyScreen({ go }: ScreenProps) {
             <Toggle label="כריך לבית הספר" checked={draft.getsSandwich} onChange={(getsSandwich) => setDraft({ ...draft, getsSandwich })} />
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <span className="flex-1"><b className="block">יש טלפון או טאבלט</b><small className="text-sm text-soft">אפשר לחבר לו/לה מסך אישי (‎/kid)</small></span>
+            <span className="flex-1"><b className="block">יש טלפון או טאבלט</b><small className="text-sm text-soft">עם מכשיר: מסך אישי (‎/kid). בלי: מופיע בטאבלט המשפחתי</small></span>
             <Toggle label="יש טלפון או טאבלט" checked={draft.hasDevice} onChange={(hasDevice) => setDraft({ ...draft, hasDevice })} />
           </div>
           <SheetActions onCancel={() => setDraft(null)} onSave={save} disabled={!draft.name.trim()} onDelete={draft.isNew ? undefined : remove} />

@@ -62,6 +62,8 @@ function Tablet() {
   const dataOf = useKidData(db, period, today);
   const kids = [...db.family_members]
     .sort((a, b) => a.sortOrder - b.sortOrder)
+    // הטאבלט מיועד למי שאין לו מכשיר משלו; ילד עם טלפון או טאבלט מדווח מהמסך האישי שלו
+    .filter((m) => !m.hasDevice)
     .filter((m) => db.routine_items.some((item) => item.memberId === m.id) || db.tasks.some((t) => t.memberId === m.id && m.getsSandwich));
 
   // חזרה אוטומטית למסך הבחירה
@@ -80,7 +82,7 @@ function Tablet() {
           <p className="mt-1 text-[clamp(18px,3vw,24px)] font-semibold text-soft">נוגעים בתמונה שלך</p>
         </header>
         <main className="grid flex-1 grid-cols-2 content-center gap-[clamp(12px,2.4vw,22px)] px-[clamp(16px,4vw,40px)] pb-[clamp(18px,4vw,40px)] pt-[clamp(12px,3vw,28px)] min-[900px]:grid-cols-4">
-          {!kids.length && <p className="col-span-full text-center text-xl text-soft">עוד לא הוגדרו הכנות. מגדירים ב-Admin, תחת הגדרות ותצוגה.</p>}
+          {!kids.length && <p className="col-span-full text-center text-xl text-soft">אין כאן אף ילד עדיין. מופיעים כאן ילדים בלי מכשיר משלהם, שהוגדרו להם הכנות ב-Admin.</p>}
           {kids.map((member) => {
             const { routine } = dataOf(member);
             const ready = routine.length > 0 && routine.every((entry) => entry.done);
