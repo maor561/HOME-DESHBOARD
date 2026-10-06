@@ -41,6 +41,9 @@ export interface MorningKid {
   bring: string;
   activity: string;
   task: string;
+  /** הכנות הבוקר של הילד; ריק אם לא הוגדרו לו */
+  items: { id: string; icon: string; text: string; done: boolean }[];
+  ready: boolean;
 }
 
 export interface EveningKid {
@@ -224,7 +227,12 @@ export function useDashboard(): DashboardModel {
     // הודעה למסך: האחרונה שעוד בתוקף
     const nowIso = now.toISOString();
     const liveMessage = [...db.messages].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find((m) => m.expiresAt === null || m.expiresAt > nowIso) ?? null;
-    const morningKids: MorningKid[] = members.filter((m) => m.getsSandwich).map((member) => {
+    const morningItems = (memberId: string) => db.routine_items
+      .filter((item) => item.memberId === memberId && item.period === 'morning')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((item) => ({ id: item.id, icon: item.icon, text: item.text, done: db.routine_checks.some((c) => c.itemId === item.id && c.date === today) }));
+    const morningKids: MorningKid[] = members.filter((m) => m.getsSandwich || morningItems(m.id).length > 0).map((member) => {
+      const items = morningItems(member.id);
       const mine = todayActivities.filter((a) => a.memberId === member.id);
       const task = db.tasks.find((t) => t.memberId === member.id && !t.done && (!t.dueDate || t.dueDate <= today));
       return {
@@ -233,6 +241,8 @@ export function useDashboard(): DashboardModel {
         bring: [...new Set(mine.map((a) => a.bring).filter(Boolean))].join(', '),
         activity: mine[0] ? `${mine[0].startTime} · ${mine[0].title}` : '',
         task: task?.title ?? '',
+        items,
+        ready: items.length > 0 && items.every((item) => item.done),
       };
     });
 
