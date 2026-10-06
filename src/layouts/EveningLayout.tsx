@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { SkyBackdrop } from '../components/dashboard/SkyBackdrop';
 import { Clock, WEATHER_ICON } from '../components/dashboard/widgets';
 import type { DashboardModel } from '../hooks/useDashboard';
+import { useFitCards } from '../hooks/useFitCards';
 import { weatherText } from '../services/weather';
 
 /** צבע הנייר וההטיה של הכרטיסים בסגנון "לוח המקרר" */
@@ -14,10 +15,11 @@ const PAPERS: [string, string][] = [['#fde3e0', '-.6deg'], ['#ece2f8', '.5deg'],
  */
 export function EveningLayout({ model }: { model: DashboardModel }) {
   const { evening } = model;
+  const kidsRef = useFitCards();
   const Icon = evening.tomorrowWeather ? WEATHER_ICON[evening.tomorrowWeather.kind] : null;
   const readyKids = evening.kids.filter((kid) => kid.ready).length;
   return (
-    <section className={`sty s-morning s-evening s-${model.settings.style} on`}>
+    <section className={`sty s-morning s-evening s-compact s-${model.settings.style} on`}>
       <SkyBackdrop weather={model.weather.kind} orb={model.orb} />
       <div className="mg">
         <div className="m-top">
@@ -43,11 +45,12 @@ export function EveningLayout({ model }: { model: DashboardModel }) {
             <small>{evening.doneCount} מתוך {evening.totalCount} הכנות</small>
           </div>
         </div>
-        <div className="m-kids" style={{ gridTemplateColumns: `repeat(${Math.max(1, evening.kids.length)}, minmax(0, 1fr))` }}>
+        <div className="m-kids" ref={kidsRef} style={{ gridTemplateColumns: `repeat(${Math.max(1, evening.kids.length)}, minmax(0, 1fr))` }}>
           {evening.kids.map((kid, i) => {
             const done = kid.items.filter((item) => item.done).length;
             return (
               <div className={`card kid ${kid.ready ? 'ready' : ''}`} key={kid.member.id} style={{ '--p': PAPERS[i % 4][0], '--r': PAPERS[i % 4][1] } as CSSProperties}>
+                <div className="kid-in">
                 <div className="kid-h">
                   <span className="badge" style={{ '--c': kid.member.color } as CSSProperties}>{kid.member.name[0]}</span>
                   <b>{kid.member.name}</b>
@@ -67,6 +70,7 @@ export function EveningLayout({ model }: { model: DashboardModel }) {
                     {kid.bring && <><br />🎒 {kid.bring}</>}
                   </div>
                 )}
+                </div>
               </div>
             );
           })}

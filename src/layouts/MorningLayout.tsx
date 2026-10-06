@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { SkyBackdrop } from '../components/dashboard/SkyBackdrop';
 import { Clock, WeatherNow } from '../components/dashboard/widgets';
 import type { DashboardModel } from '../hooks/useDashboard';
+import { useFitCards } from '../hooks/useFitCards';
 
 /** צבע הנייר וההטיה של הכרטיסים בסגנון "לוח המקרר" */
 const PAPERS: [string, string][] = [['#fde3e0', '-.6deg'], ['#ece2f8', '.5deg'], ['#dcebf7', '-.4deg'], ['#fff3a8', '.6deg']];
@@ -17,9 +18,6 @@ function Line({ icon, label, value, empty }: { icon: string; label: string; valu
   );
 }
 
-/** עד כמה הכנות נכנסות לכרטיס בגודל מלא; רשימה ארוכה יותר מוקטנת כך שתתפוס אותו גובה */
-const FULL_SIZE_ITEMS = 7;
-
 /**
  * מסך היציאה מהבית. מחליף את המסך הרגיל בבקרי ימי הלימודים, עד קצת אחרי שעת היציאה:
  * לכל ילד הכנות הבוקר שלו (מסתמנות כשהוא מדווח), הכריך של היום, מה להביא והחוג.
@@ -27,10 +25,11 @@ const FULL_SIZE_ITEMS = 7;
  */
 export function MorningLayout({ model }: { model: DashboardModel }) {
   const { morning, meals } = model;
+  const kidsRef = useFitCards();
   const withList = morning.kids.filter((kid) => kid.items.length > 0);
   const readyKids = withList.filter((kid) => kid.ready).length;
   return (
-    <section className={`sty s-morning s-am s-${model.settings.style} on`}>
+    <section className={`sty s-morning s-compact s-${model.settings.style} on`}>
       <SkyBackdrop weather={model.weather.kind} orb={model.orb} />
       <div className="mg">
         <div className="m-top">
@@ -50,9 +49,10 @@ export function MorningLayout({ model }: { model: DashboardModel }) {
             {withList.length > 0 && <span className="m-ready">☀️ מוכנים {readyKids}/{withList.length}</span>}
           </div>
         </div>
-        <div className="m-kids" style={{ gridTemplateColumns: `repeat(${Math.max(1, morning.kids.length)}, minmax(0, 1fr))` }}>
+        <div className="m-kids" ref={kidsRef} style={{ gridTemplateColumns: `repeat(${Math.max(1, morning.kids.length)}, minmax(0, 1fr))` }}>
           {morning.kids.map((kid, i) => (
             <div className={`card kid ${kid.ready ? 'ready' : ''}`} key={kid.member.id} style={{ '--p': PAPERS[i % 4][0], '--r': PAPERS[i % 4][1] } as CSSProperties}>
+              <div className="kid-in">
               <div className="kid-h">
                 <span className="badge" style={{ '--c': kid.member.color } as CSSProperties}>{kid.member.name[0]}</span>
                 <b>{kid.member.name}</b>
@@ -60,15 +60,13 @@ export function MorningLayout({ model }: { model: DashboardModel }) {
               </div>
               {kid.items.length > 0 ? (
                 <>
-                  <div style={{ fontSize: `${Math.min(1, FULL_SIZE_ITEMS / kid.items.length)}em` }}>
-                    {kid.items.map((item) => (
-                      <div className={`ck ${item.done ? 'done' : ''}`} key={item.id}>
-                        <span className="box"><Check className="ic" aria-hidden="true" /></span>
-                        <span className="ck-e">{item.icon}</span>
-                        {item.text}
-                      </div>
-                    ))}
-                  </div>
+                  {kid.items.map((item) => (
+                    <div className={`ck ${item.done ? 'done' : ''}`} key={item.id}>
+                      <span className="box"><Check className="ic" aria-hidden="true" /></span>
+                      <span className="ck-e">{item.icon}</span>
+                      {item.text}
+                    </div>
+                  ))}
                   {(kid.sandwich || kid.bring || kid.activity) && (
                     <div className="tom today">
                       {kid.sandwich && <span>🥪 <b>{kid.sandwich}</b></span>}
@@ -85,6 +83,7 @@ export function MorningLayout({ model }: { model: DashboardModel }) {
                   <Line icon="✅" label="משימה" value={kid.task} />
                 </>
               )}
+              </div>
             </div>
           ))}
         </div>

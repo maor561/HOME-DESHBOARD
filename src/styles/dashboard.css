@@ -367,13 +367,13 @@ svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width
 @keyframes msgbar { to { transform: scaleX(0); } }
 
 .ck-e { font-size: 1.15em; line-height: 1; text-decoration: none; display: inline-block; }
-/* בוקר עם רשימת הכנות: השעון והטמפרטורה קטנים מעט כדי לפנות מקום לרשימות */
-.s-am .clock { font-size: 6.6em; } .s-am .mg { gap: calc(var(--u) * 1.2); }
-.s-am .m-wx .wx-temp { font-size: 4.6em; } .s-am .m-wx .wx-now > .ic { font-size: 4.2em; }
-.s-am .m-go b { font-size: 4.6em; }
-.s-am .ck { font-size: 1.14em; padding: .25em 0; }
-.s-am .kid-h { margin-bottom: .3em; }
-.s-am .kid .tom { margin-top: .35em; padding-top: .35em; font-size: .98em; }
+/* בוקר וערב עם רשימות הכנות: השעון והטמפרטורה קטנים מעט כדי לפנות מקום לרשימות */
+.s-compact .clock { font-size: 6.6em; } .s-compact .mg { gap: calc(var(--u) * 1.2); }
+.s-compact .m-wx .wx-temp { font-size: 4.6em; } .s-compact .m-wx .wx-now > .ic { font-size: 4.2em; }
+.s-compact .m-go b { font-size: 4.6em; }
+.s-compact .ck { font-size: 1.14em; padding: .25em 0; }
+.s-compact .kid-h { margin-bottom: .3em; }
+.s-compact .kid .tom { margin-top: .35em; padding-top: .35em; font-size: .98em; }
 .kid-h .prog { white-space: nowrap; }
 .kid .today { display: flex; flex-direction: column; gap: .12em; line-height: 1.35; }
 .kid .today span { display: block; }
