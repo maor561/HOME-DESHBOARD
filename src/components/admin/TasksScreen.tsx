@@ -2,7 +2,7 @@ import { Check, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { FAMILY_ID } from '../../data/seed';
 import { addDays, dueLabel, toISODate } from '../../lib/dates';
-import { toggleTask, uid } from '../../services/mutations';
+import { isPending, toggleTask, uid } from '../../services/mutations';
 import { store } from '../../services/store';
 import type { Task, TaskRepeat } from '../../types';
 import { Fab, IconButton, MemberChip, Picker, ScreenHeader, Segmented, Sheet, SheetActions, TextInput, toast } from '../ui';
@@ -11,7 +11,7 @@ import { useFamily } from './shared';
 type Filter = 'open' | 'all' | 'repeat';
 const REPEAT_LABEL: Record<TaskRepeat, string> = { none: 'חד-פעמית', daily: 'כל יום', weekly: 'כל שבוע', monthly: 'כל חודש' };
 
-export const newTask = (): Task => ({ id: uid(), familyId: FAMILY_ID, title: '', done: false, completedAt: null, dueDate: toISODate(new Date()), priority: 'normal', memberId: null, repeat: 'none', stars: 1 });
+export const newTask = (): Task => ({ id: uid(), familyId: FAMILY_ID, title: '', done: false, completedAt: null, pendingAt: null, dueDate: toISODate(new Date()), priority: 'normal', memberId: null, repeat: 'none', stars: 1 });
 
 export function TaskSheet({ task, isNew, onClose }: { task: Task; isNew: boolean; onClose: () => void }) {
   const { members } = useFamily();
@@ -68,11 +68,12 @@ export function TasksScreen() {
         {!tasks.length && <p className="py-8 text-center text-soft">אין משימות ברשימה הזו</p>}
         {tasks.map((task) => {
           const member = task.memberId ? memberById.get(task.memberId) : null;
-          const meta = [dueLabel(task.dueDate, now), task.repeat !== 'none' && `🔁 ${REPEAT_LABEL[task.repeat]}`, task.priority === 'high' && 'עדיפות גבוהה'].filter(Boolean).join(' · ');
+          const waiting = isPending(task);
+          const meta = [waiting && '⏳ ממתין לאישור שלך', dueLabel(task.dueDate, now), task.repeat !== 'none' && `🔁 ${REPEAT_LABEL[task.repeat]}`, task.priority === 'high' && 'עדיפות גבוהה'].filter(Boolean).join(' · ');
           return (
             <div key={task.id} className="flex min-h-14 items-center gap-3 py-2.5">
-              <button role="checkbox" aria-checked={task.done} aria-label={`סימון: ${task.title}`} onClick={() => toggleTask(task)}
-                className={`grid size-7 flex-none place-items-center rounded-[9px] border-2 ${task.done ? 'border-ok bg-ok text-white' : 'border-faint text-transparent'}`}>
+              <button role="checkbox" aria-checked={task.done} aria-label={`${waiting ? 'אישור' : 'סימון'}: ${task.title}`} onClick={() => toggleTask(task)}
+                className={`grid size-7 flex-none place-items-center rounded-[9px] border-2 ${task.done ? 'border-ok bg-ok text-white' : waiting ? 'border-[#f0a93b] bg-[#fff4d6] text-transparent' : 'border-faint text-transparent'}`}>
                 <Check className="size-4" strokeWidth={3} />
               </button>
               <div className="min-w-0 flex-1">

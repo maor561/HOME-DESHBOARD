@@ -7,7 +7,7 @@ import { useHolidays } from '../hooks/useHolidays';
 import { useNow } from '../hooks/useNow';
 import { buildWeek, displayedWeekStart } from '../lib/calendar';
 import { WEEKDAYS, addDays, formatLongDate, minutesOf, timeToMinutes, toISODate, upcomingBirthdays } from '../lib/dates';
-import { kidAddShopping, kidRequestReward, kidRequestSandwich, kidSendMessage, kidToggleRoutine, kidToggleTask, menuHistory } from '../services/mutations';
+import { kidAddShopping, kidRequestReward, kidRequestSandwich, kidSendMessage, kidToggleRoutine, isPending, kidToggleTask, menuHistory, needsApproval } from '../services/mutations';
 import { store } from '../services/store';
 import type { SupabaseStore } from '../services/supabaseStore';
 import type { Database, FamilyMember, Task } from '../types';
@@ -69,16 +69,25 @@ function Info({ icon, label, value, side }: { icon: string; label: string; value
 }
 
 function TaskRow({ task, label }: { task: Task; label?: string }) {
-  const toggle = () => kidToggleTask(task).catch((error: Error) => toast(`לא הצלחתי לשמור: ${error.message}`));
+  const waiting = isPending(task);
+  const approved = task.done && needsApproval(task);
+  const toggle = () => {
+    if (approved) return toast('המשימה כבר אושרה. רק אמא או אבא יכולים לבטל');
+    kidToggleTask(task)
+      .then(() => { if (!waiting && needsApproval(task)) toast('נשלח לאישור של אמא או אבא'); })
+      .catch((error: Error) => toast(`לא הצלחתי לשמור: ${error.message}`));
+  };
   return (
-    <div className="flex min-h-[60px] items-center gap-3 py-3">
-      <button role="checkbox" aria-checked={task.done} aria-label={`סימון: ${task.title}`} onClick={toggle}
-        className={`grid size-[34px] flex-none place-items-center rounded-xl border-[2.5px] transition-colors ${task.done ? 'border-ok bg-ok text-white' : 'border-faint text-transparent'}`}>
-        <Check className="size-5" strokeWidth={3} />
+    <div className={`flex min-h-[60px] items-center gap-3 py-3 ${waiting ? '-mx-2 rounded-2xl bg-[#fff4d6] px-2' : ''}`}>
+      <button role="checkbox" aria-checked={task.done ? true : waiting ? 'mixed' : false} aria-label={`סימון: ${task.title}`} onClick={toggle}
+        className={`grid size-[34px] flex-none place-items-center rounded-xl border-[2.5px] transition-colors ${task.done ? 'border-ok bg-ok text-white' : waiting ? 'border-[#f0a93b] bg-[#f0a93b] text-base' : 'border-faint text-transparent'}`}>
+        {waiting ? '⏳' : <Check className="size-5" strokeWidth={3} />}
       </button>
       <span className="min-w-0 flex-1">
         {label && <small className="block text-[13px] font-bold text-soft">{label}</small>}
         <b className={`block text-[17px] leading-snug ${task.done ? 'font-medium text-faint line-through' : ''}`}>{task.title}</b>
+        {waiting && <small className="block text-[13px] font-bold text-[#9a6708]">ממתין לאישור של אמא או אבא</small>}
+        {approved && <small className="block text-[13px] font-bold text-ok">אושר! קיבלת ⭐ {task.stars}</small>}
       </span>
       <span className="whitespace-nowrap text-sm font-bold text-[var(--kc)]">⭐ {task.stars}</span>
     </div>
@@ -187,7 +196,7 @@ function KidApp({ member, db }: { member: FamilyMember; db: Database }) {
   } else if (tab === 'tasks') {
     body = (
       <>
-        <Hero icon="⭐" title={`${member.stars} כוכבים`} subtitle={weekStars > 0 ? `השבוע אספת ${weekStars}` : 'כל משימה שמסמנים מוסיפה כוכבים'}>
+        <Hero icon="⭐" title={`${member.stars} כוכבים`} subtitle={weekStars > 0 ? `השבוע אספת ${weekStars}` : 'מסמנים משימה, אמא או אבא מאשרים, ומקבלים כוכבים'}>
           {nextReward && (
             <div className="mt-4 rounded-[18px] bg-white/20 px-3.5 py-3">
               <small className="block text-[13px] font-bold opacity-90">{nextReward.cost > member.stars ? 'הפרס הבא' : 'יש לך מספיק כוכבים!'}</small>
@@ -225,7 +234,7 @@ function KidApp({ member, db }: { member: FamilyMember; db: Database }) {
             <Box>{laterTasks.map((t) => { const [y, m, d] = t.dueDate!.split('-').map(Number); return <TaskRow key={t.id} task={t} label={`יום ${WEEKDAYS[new Date(y, m - 1, d).getDay()]}`} />; })}</Box>
           </Section>
         )}
-        <p className="px-1 pt-2 text-sm text-soft">ההורים רואים מה סימנת, ויכולים לבטל סימון. כשמבקשים פרס, ההורים מאשרים ואז הכוכבים יורדים.</p>
+        <p className="px-1 pt-2 text-sm text-soft">אחרי שמסמנים משימה, אמא או אבא מאשרים ואז הכוכבים נכנסים. כשמבקשים פרס, ההורים מאשרים ואז הכוכבים יורדים.</p>
       </>
     );
   } else if (tab === 'week') {

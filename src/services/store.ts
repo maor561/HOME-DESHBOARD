@@ -39,7 +39,7 @@ export function normalize(db: Partial<Database>, seedMissingTables = true): Data
     // שדות שנוספו בגרסאות מאוחרות מקבלים ברירת מחדל בנתונים ישנים
     family_members: full.family_members.map((m) => ({ ...m, hasDevice: m.hasDevice ?? false, stars: m.stars ?? 0 })),
     activities: full.activities.map((a) => ({ ...a, bring: a.bring ?? '' })),
-    tasks: full.tasks.map((t) => ({ ...t, stars: t.stars ?? 1 })),
+    tasks: full.tasks.map((t) => ({ ...t, stars: t.stars ?? 1, pendingAt: t.pendingAt ?? null })),
     routine_items: full.routine_items.map((r) => ({ ...r, icon: r.icon ?? ROUTINE_ICONS[r.text] ?? '✅', period: r.period ?? 'evening' })),
     settings: full.settings.map((s) => {
       const merged = { ...seed.settings[0], ...s, calendar: { ...seed.settings[0].calendar, ...s.calendar } };

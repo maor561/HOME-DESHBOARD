@@ -65,10 +65,10 @@ export function createSeed(today = new Date()): Database {
     ],
     meals,
     tasks: [
-      { id: 'demo-task-1', familyId: FAMILY_ID, title: 'לקנות חלב', done: true, completedAt: today.toISOString(), dueDate: toISODate(today), priority: 'normal', memberId: 'maor', repeat: 'none', stars: 1 },
-      { id: 'demo-task-2', familyId: FAMILY_ID, title: 'להכין תיקים לבית הספר', done: false, completedAt: null, dueDate: toISODate(today), priority: 'high', memberId: 'alma', repeat: 'daily', stars: 1 },
-      { id: 'demo-task-3', familyId: FAMILY_ID, title: 'לשלם חשבון חשמל', done: false, completedAt: null, dueDate: toISODate(addDays(today, 1)), priority: 'normal', memberId: 'nofar', repeat: 'none', stars: 1 },
-      { id: 'demo-task-4', familyId: FAMILY_ID, title: 'להזמין ניקיון', done: false, completedAt: null, dueDate: toISODate(addDays(today, 3)), priority: 'normal', memberId: null, repeat: 'none', stars: 1 },
+      { id: 'demo-task-1', familyId: FAMILY_ID, title: 'לקנות חלב', done: true, completedAt: today.toISOString(), pendingAt: null, dueDate: toISODate(today), priority: 'normal', memberId: 'maor', repeat: 'none', stars: 1 },
+      { id: 'demo-task-2', familyId: FAMILY_ID, title: 'להכין תיקים לבית הספר', done: false, completedAt: null, pendingAt: null, dueDate: toISODate(today), priority: 'high', memberId: 'alma', repeat: 'daily', stars: 1 },
+      { id: 'demo-task-3', familyId: FAMILY_ID, title: 'לשלם חשבון חשמל', done: false, completedAt: null, pendingAt: null, dueDate: toISODate(addDays(today, 1)), priority: 'normal', memberId: 'nofar', repeat: 'none', stars: 1 },
+      { id: 'demo-task-4', familyId: FAMILY_ID, title: 'להזמין ניקיון', done: false, completedAt: null, pendingAt: null, dueDate: toISODate(addDays(today, 3)), priority: 'normal', memberId: null, repeat: 'none', stars: 1 },
     ],
     daily_quotes: [
       'הדברים הגדולים מתחילים בצעדים קטנים.',

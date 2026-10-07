@@ -34,10 +34,17 @@ export async function copyWeek(db: Database, fromWeekStart: Date, toWeekStart: D
 
 export const updateSettings = (settings: Settings, patch: Partial<Settings>): Promise<void> => store.upsert('settings', { ...settings, ...patch });
 
-/** סימון משימה. כשהמשימה משויכת לבן משפחה, הכוכבים שלה מתווספים לו או יורדים ממנו. */
+/** משימה של בן משפחה ששווה כוכבים: כשילד מסמן אותה, היא מחכה לאישור הורה לפני שהכוכבים נכנסים. */
+export const needsApproval = (task: Task): boolean => task.memberId !== null && task.stars > 0;
+export const isPending = (task: Task): boolean => !task.done && !!task.pendingAt;
+
+/**
+ * סימון משימה בידי הורה: נסגרת (או נפתחת) מיד, והכוכבים שלה מתווספים לבן המשפחה או יורדים ממנו.
+ * זה גם האישור של משימה שילד סימן וממתינה.
+ */
 export async function toggleTask(task: Task): Promise<void> {
   const done = !task.done;
-  await store.upsert('tasks', { ...task, done, completedAt: done ? new Date().toISOString() : null });
+  await store.upsert('tasks', { ...task, done, completedAt: done ? new Date().toISOString() : null, pendingAt: null });
   const member = store.getSnapshot().family_members.find((m) => m.id === task.memberId);
   if (member && task.stars) await addStars(member, done ? task.stars : -task.stars, 'task');
 }
@@ -46,6 +53,19 @@ export async function toggleTask(task: Task): Promise<void> {
 export async function addStars(member: FamilyMember, amount: number, kind: StarLog['kind']): Promise<void> {
   await store.upsert('family_members', { ...member, stars: Math.max(0, member.stars + amount) });
   await store.upsert('star_log', { id: uid(), familyId: FAMILY_ID, memberId: member.id, amount, kind, createdAt: new Date().toISOString() });
+}
+
+/** "עוד לא": המשימה חוזרת לילד כפתוחה, בלי כוכבים. */
+export const rejectTask = (task: Task): Promise<void> => store.upsert('tasks', { ...task, pendingAt: null });
+
+/**
+ * סימון משימה בידי ילד. משימת כוכבים עוברת ל"ממתין לאישור" (נגיעה נוספת מבטלת),
+ * ומשימה שכבר אושרה רק הורה יכול לפתוח מחדש. משימה בלי כוכבים נסגרת מיד.
+ */
+export function kidTaskStep(task: Task): Promise<void> {
+  if (!needsApproval(task)) return toggleTask(task);
+  if (task.done) return Promise.reject(new Error('רק אמא או אבא יכולים לבטל משימה שאושרה'));
+  return store.upsert('tasks', { ...task, pendingAt: task.pendingAt ? null : new Date().toISOString() });
 }
 
 /* ---------- שגרת ערב ---------- */
@@ -207,7 +227,7 @@ async function kidAction(name: string, args: Record<string, unknown>, direct: ()
 }
 
 export function kidToggleTask(task: Task): Promise<void> {
-  return kidAction('kid_toggle_task', { p_task: task.id }, () => toggleTask(task));
+  return kidAction('kid_toggle_task', { p_task: task.id }, () => kidTaskStep(task));
 }
 
 export function kidAddShopping(text: string, memberId: ID): Promise<void> {
@@ -225,7 +245,7 @@ export function tabletToggleRoutine(item: RoutineItem, date: ISODate): Promise<v
 }
 
 export function tabletToggleTask(task: Task): Promise<void> {
-  return kidAction('tablet_toggle_task', { p_task: task.id }, () => toggleTask(task));
+  return kidAction('tablet_toggle_task', { p_task: task.id }, () => kidTaskStep(task));
 }
 
 export function kidRequestReward(member: FamilyMember, reward: Reward): Promise<void> {
@@ -262,7 +282,7 @@ export async function rolloverTasks(db: Database, now = new Date()): Promise<voi
     let due = new Date(y, m - 1, d);
     do due = STEP[task.repeat](due);
     while (toISODate(due) < today);
-    await store.upsert('tasks', { ...task, done: false, completedAt: null, dueDate: toISODate(due) });
+    await store.upsert('tasks', { ...task, done: false, completedAt: null, pendingAt: null, dueDate: toISODate(due) });
   }
 }
 

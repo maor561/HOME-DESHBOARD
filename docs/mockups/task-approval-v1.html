@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>משפחת כהן · אישור הורה למשימות כוכבים · סקיצה</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f6f1e7; --card: #fffdf7; --ink: #1f2a3d; --soft: #6d7686; --line: #e6dfd0; --ok: #2f9e7a; --wait: #f0a93b; --waitbg: #fff4d6; --accent: #d9603b; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Heebo, sans-serif; background: #e9e2d3; color: var(--ink); padding: 24px 16px 40px; }
+  h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; }
+  .lead { color: var(--soft); font-weight: 600; margin: 4px 0 22px; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; align-items: start; }
+  .col > h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .col > p { font-size: 14px; color: var(--soft); font-weight: 600; margin-bottom: 10px; min-height: 40px; }
+  .phone { background: var(--paper); border-radius: 30px; border: 8px solid #2a2f3a; padding: 16px 14px 20px; min-height: 520px; }
+  .top { font-family: 'Frank Ruhl Libre', serif; font-size: 24px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .pill { font-family: Heebo; font-size: 15px; font-weight: 800; background: var(--card); border-radius: 99px; padding: 4px 12px; }
+  .sec { font-size: 13px; font-weight: 800; color: var(--soft); letter-spacing: .04em; margin: 14px 2px 6px; }
+  .task { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 18px; padding: 12px 14px; margin-bottom: 8px; border: 3px solid transparent; box-shadow: 0 2px 0 var(--line); }
+  .task b { flex: 1; font-size: 17px; font-weight: 800; line-height: 1.25; }
+  .task small { display: block; font-size: 13px; font-weight: 700; color: var(--soft); }
+  .box { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #c9c2b3; display: grid; place-items: center; font-size: 18px; flex: none; color: transparent; }
+  .task.wait { border-color: var(--wait); background: var(--waitbg); }
+  .task.wait .box { border-color: var(--wait); background: var(--wait); color: #fff; }
+  .task.wait small { color: #9a6708; }
+  .task.done { border-color: var(--ok); background: #e8f6ef; }
+  .task.done .box { border-color: var(--ok); background: var(--ok); color: #fff; }
+  .task.done b { color: #2c6f58; } .task.done small { color: #2c6f58; }
+  .ask { background: var(--card); border-radius: 20px; padding: 14px; margin-bottom: 10px; border: 3px solid var(--wait); }
+  .ask .who { display: flex; align-items: center; gap: 10px; }
+  .badge { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; flex: none; }
+  .ask b { font-size: 17px; font-weight: 800; display: block; line-height: 1.25; }
+  .ask small { font-size: 13px; color: var(--soft); font-weight: 700; }
+  .btns { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; height: 42px; border-radius: 14px; border: 0; font: 800 15px Heebo; background: var(--ink); color: #fff; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+  .btn.all { width: 100%; background: var(--ok); margin-bottom: 12px; flex: none; }
+  .tile { display: flex; align-items: center; gap: 14px; border-radius: 24px; padding: 14px 16px; margin-bottom: 10px; background: var(--card); border: 4px solid transparent; box-shadow: 0 3px 0 var(--line); }
+  .tile .e { width: 60px; height: 60px; border-radius: 20px; background: #fde3e0; display: grid; place-items: center; font-size: 34px; flex: none; }
+  .tile b { flex: 1; font-size: 22px; font-weight: 800; line-height: 1.2; } .tile small { display: block; font-size: 15px; color: var(--soft); font-weight: 700; }
+  .tile .box { width: 48px; height: 48px; font-size: 26px; border-width: 5px; }
+  .tile.wait { border-color: var(--wait); background: var(--waitbg); } .tile.wait .box { border-color: var(--wait); background: var(--wait); color: #fff; } .tile.wait small { color: #9a6708; }
+  .tv { margin-top: 26px; background: #1b2650; color: #fff; border-radius: 18px; padding: 18px 20px; max-width: 520px; }
+  .tv h3 { font-size: 14px; letter-spacing: .1em; opacity: .7; margin-bottom: 8px; }
+  .tv div { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid rgba(255,255,255,.15); font-weight: 700; font-size: 17px; }
+  .tv i { font-style: normal; margin-inline-start: auto; font-size: 14px; opacity: .85; }
+  .tv .w { color: #ffd27a; }
+</style>
+</head>
+<body>
+<h1>אישור הורה למשימות כוכבים</h1>
+<p class="lead">הילד מסמן "עשיתי", המשימה ממתינה, והכוכבים נכנסים רק אחרי שהורה מאשר.</p>
+
+<div class="row">
+  <div class="col">
+    <h2>1 · המסך של הילד (‎/kid)</h2>
+    <p>שלושה מצבים: פתוחה, ממתינה לאישור (צהוב), אושרה (ירוק + כוכבים).</p>
+    <div class="phone">
+      <div class="top">המשימות של אלמה <span class="pill">⭐ 12</span></div>
+      <div class="task"><span class="box">✓</span><b>לסדר את החדר<small>⭐ 2 כוכבים</small></b></div>
+      <div class="task wait"><span class="box">⏳</span><b>להאכיל את הדגים<small>ממתין לאישור של אמא או אבא · ⭐ 1</small></b></div>
+      <div class="task done"><span class="box">✓</span><b>להכין תיק<small>אושר! קיבלת ⭐ 1</small></b></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>2 · Admin של ההורה (מסך הבית)</h2>
+    <p>כרטיס "ממתין לאישור שלך" בראש מסך הבית, עם אישור לכל משימה או לכולן יחד.</p>
+    <div class="phone">
+      <div class="top">שלום מאור <span class="pill">🔔 2</span></div>
+      <div class="sec">ממתין לאישור שלך</div>
+      <button class="btn all">אישור לכולן (2)</button>
+      <div class="ask">
+        <div class="who"><span class="badge" style="background:#e2607a">א</span><div><b>להאכיל את הדגים</b><small>אלמה · סומן ב-17:42 · ⭐ 1</small></div></div>
+        <div class="btns"><button class="btn">אישור · ⭐ 1</button><button class="btn ghost">עוד לא</button></div>
+      </div>
+      <div class="ask">
+        <div class="who"><span class="badge" style="background:#3f8fdc">א</span><div><b>לפנות את השולחן</b><small>אילון · סומן ב-18:05 · ⭐ 2</small></div></div>
+        <div class="btns"><button class="btn">אישור · ⭐ 2</button><button class="btn ghost">עוד לא</button></div>
+      </div>
+      <div class="sec">"עוד לא" מחזיר את המשימה לילד כפתוחה</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>3 · הטאבלט המשפחתי (‎/kids)</h2>
+    <p>אותו דבר בכפתורים הגדולים: נגיעה הופכת את המשימה ל"ממתין לאישור".</p>
+    <div class="phone">
+      <div class="top">אילון <span class="pill">⭐ 7</span></div>
+      <div class="tile wait"><span class="e">🍽️</span><b>לפנות את השולחן<small>ממתין לאישור · ⭐ 2</small></b><span class="box">⏳</span></div>
+      <div class="tile"><span class="e">🧸</span><b>לאסוף צעצועים<small>⭐ 1</small></b><span class="box">✓</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="tv">
+  <h3>על מסך הטלוויזיה · כרטיס המשימות</h3>
+  <div>☐ לסדר את החדר <i>אלמה</i></div>
+  <div class="w">⏳ להאכיל את הדגים <i>אלמה · ממתין לאישור</i></div>
+  <div style="opacity:.55;text-decoration:line-through">☑ להכין תיק <i>אלמה</i></div>
+</div>
+</body>
+</html>

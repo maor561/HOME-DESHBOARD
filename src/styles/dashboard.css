@@ -128,6 +128,8 @@ svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width
 .task.done .box .ic { opacity: 1; }
 .task b { flex: 1; font-size: 1.14em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .task.done b { text-decoration: line-through; color: var(--faint); font-weight: 500; }
+.task.wait .box { border-color: #f0a93b; background: #f0a93b; font-size: .72em; }
+.task.wait small { color: #f0a93b; font-weight: 700; }
 .task small { font-size: .86em; color: var(--soft); white-space: nowrap; }
 .task .hi { width: .55em; height: .55em; border-radius: 50%; background: #ff6b5e; flex: none; }
 .bd { display: flex; align-items: center; gap: .7em; padding: .3em 0; }

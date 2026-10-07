@@ -212,12 +212,12 @@ export function TaskList({ rows }: { rows: TaskRow[] }) {
   return (
     <div>
       {rows.map((task) => (
-        <div className={`task ${task.done ? 'done' : ''}`} key={task.id}>
-          <span className="box"><Check className="ic" aria-hidden="true" /></span>
+        <div className={`task ${task.done ? 'done' : task.pending ? 'wait' : ''}`} key={task.id}>
+          <span className="box">{task.pending ? '⏳' : <Check className="ic" aria-hidden="true" />}</span>
           <b>{task.title}</b>
           {task.high && !task.done && <i className="hi" />}
           {task.member && <span className="who" style={{ '--c': task.member.color } as React.CSSProperties}>{task.member.name}</span>}
-          <small>{task.due}</small>
+          <small>{task.pending ? 'ממתין לאישור' : task.due}</small>
         </div>
       ))}
     </div>

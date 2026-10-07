@@ -74,6 +74,8 @@ export interface Task {
   title: string;
   done: boolean;
   completedAt: string | null;
+  /** מתי הילד סימן "עשיתי" במשימת כוכבים שעוד מחכה לאישור הורה; ‎null כשאין בקשה פתוחה */
+  pendingAt: string | null;
   dueDate: ISODate | null;
   priority: 'normal' | 'high';
   memberId: ID | null;

@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { navigate } from '../../hooks/useRoute';
 import { useNow } from '../../hooks/useNow';
 import { WEEKDAYS, addDays, formatMinutes, minutesOf, toISODate, upcomingBirthdays } from '../../lib/dates';
+import { isPending, rejectTask, toggleTask } from '../../services/mutations';
 import { store } from '../../services/store';
-import { Avatar, IconButton, ListRow, Panel, ScreenHeader } from '../ui';
+import { Avatar, Button, IconButton, ListRow, Panel, ScreenHeader, toast } from '../ui';
 import { TaskSheet, newTask } from './TasksScreen';
 import { useFamily, type ScreenProps } from './shared';
 
@@ -27,6 +28,12 @@ export function HomeScreen({ go }: ScreenProps) {
   const openTasks = db.tasks.filter((t) => !t.done).length;
   const pendingRewards = db.reward_requests.filter((r) => r.status === 'pending').length;
   const birthday = upcomingBirthdays(members, db.birthdays, now, 1)[0];
+  // משימות כוכבים שילדים סימנו ומחכות לאישור
+  const waiting = db.tasks.filter(isPending).sort((a, b) => (a.pendingAt ?? '').localeCompare(b.pendingAt ?? ''));
+  const approveAll = async () => {
+    for (const task of waiting) await toggleTask(task);
+    toast('כל המשימות אושרו');
+  };
 
   const quick: [string, string, string, () => void][] = [
     ['🥪', 'כריכים למחר', `יום ${WEEKDAYS[tomorrowDate.getDay()]} · ${sandwichesTomorrow} מתוך ${kids.length}`, () => go('menu')],
@@ -47,6 +54,31 @@ export function HomeScreen({ go }: ScreenProps) {
           <button className="text-sm font-bold underline underline-offset-4" onClick={() => navigate('/dashboard')}>פתיחת המסך</button>
         </div>
       </section>
+
+      {waiting.length > 0 && (
+        <section className="mb-3.5">
+          <h2 className="mb-2 px-1 text-[13px] font-extrabold tracking-wide text-soft">ממתין לאישור שלך</h2>
+          {waiting.length > 1 && <Button wide className="mb-2.5 h-11 !bg-ok text-sm" onClick={approveAll}>אישור לכולן ({waiting.length})</Button>}
+          {waiting.map((task) => {
+            const member = task.memberId ? memberById.get(task.memberId) : null;
+            return (
+              <div key={task.id} className="mb-2.5 rounded-[20px] border-[3px] border-[#f0a93b] bg-card p-3.5">
+                <div className="flex items-center gap-2.5">
+                  <Avatar color={member?.color ?? '#6d7686'}>{member?.name[0] ?? '?'}</Avatar>
+                  <div className="min-w-0 flex-1">
+                    <b className="block text-[17px] leading-snug">{task.title}</b>
+                    <small className="text-[13px] font-bold text-soft">{member?.name} · סומן ב-{formatMinutes(minutesOf(new Date(task.pendingAt!)))} · ⭐ {task.stars}</small>
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Button className="h-10 flex-1 text-sm" onClick={async () => { await toggleTask(task); toast(`אושר · ${member?.name ?? ''} קיבל/ה ⭐ ${task.stars}`); }}>אישור · ⭐ {task.stars}</Button>
+                  <Button variant="ghost" className="h-10 flex-1 text-sm" onClick={() => rejectTask(task)}>עוד לא</Button>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       {sandwichesTomorrow < kids.length && (
         <div className="mb-3.5 flex items-center gap-2.5 rounded-2xl bg-[#fff4d6] px-3.5 py-3 text-[15px] font-semibold">

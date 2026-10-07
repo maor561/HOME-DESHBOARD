@@ -26,6 +26,8 @@ export interface TaskRow {
   id: string;
   title: string;
   done: boolean;
+  /** ילד סימן, מחכה לאישור הורה */
+  pending: boolean;
   high: boolean;
   member: FamilyMember | null;
   due: string;
@@ -336,7 +338,7 @@ export function useDashboard(): DashboardModel {
         .filter((t) => !t.done || t.completedAt?.slice(0, 10) === now.toISOString().slice(0, 10))
         .sort((a, b) => Number(a.done) - Number(b.done) || Number(b.priority === 'high') - Number(a.priority === 'high') || (a.dueDate ?? '9').localeCompare(b.dueDate ?? '9'))
         .slice(0, 5)
-        .map((t) => ({ id: t.id, title: t.title, done: t.done, high: t.priority === 'high', member: t.memberId ? memberById.get(t.memberId) ?? null : null, due: dueLabel(t.dueDate, now) })),
+        .map((t) => ({ id: t.id, title: t.title, done: t.done, pending: !t.done && !!t.pendingAt, high: t.priority === 'high', member: t.memberId ? memberById.get(t.memberId) ?? null : null, due: dueLabel(t.dueDate, now) })),
       birthdays: upcomingBirthdays(members, db.birthdays, now),
       quote: quoteOfDay(db.daily_quotes, now),
       photos: db.photos.map((p) => p.url),

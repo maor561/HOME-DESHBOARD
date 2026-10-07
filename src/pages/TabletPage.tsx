@@ -4,7 +4,7 @@ import { Toaster, toast } from '../components/ui';
 import { useDatabase } from '../hooks/useDatabase';
 import { useNow } from '../hooks/useNow';
 import { toISODate } from '../lib/dates';
-import { tabletToggleRoutine, tabletToggleTask } from '../services/mutations';
+import { isPending, needsApproval, tabletToggleRoutine, tabletToggleTask } from '../services/mutations';
 import { store } from '../services/store';
 import type { Database, FamilyMember } from '../types';
 
@@ -25,6 +25,8 @@ interface Entry {
   text: string;
   note?: string;
   done: boolean;
+  /** משימת כוכבים שסומנה ומחכה לאישור הורה */
+  waiting?: boolean;
   toggle: () => Promise<void>;
 }
 
@@ -40,7 +42,16 @@ function useKidData(db: Database, period: 'evening' | 'morning', today: string) 
       }));
     const tasks: Entry[] = db.tasks
       .filter((t) => t.memberId === member.id && ((!t.done && (!t.dueDate || t.dueDate <= today)) || (t.done && t.completedAt !== null && toISODate(new Date(t.completedAt)) === today)))
-      .map((task) => ({ id: task.id, icon: '⭐', text: task.title, note: `⭐ ${task.stars}`, done: task.done, toggle: () => tabletToggleTask(task) }));
+      .map((task) => {
+        const waiting = isPending(task);
+        const approved = task.done && needsApproval(task);
+        return {
+          id: task.id, icon: '⭐', text: task.title, done: task.done, waiting,
+          note: waiting ? `ממתין לאישור · ⭐ ${task.stars}` : approved ? `אושר! ⭐ ${task.stars}` : `⭐ ${task.stars}`,
+          // משימה שאושרה נשארת סגורה: רק הורה מבטל, מה-Admin
+          toggle: () => (approved ? Promise.reject(new Error('רק אמא או אבא יכולים לבטל משימה שאושרה')) : tabletToggleTask(task)),
+        };
+      });
     return { routine, tasks };
   };
 }
@@ -108,6 +119,7 @@ function Tablet() {
   const { routine, tasks } = dataOf(kid);
   const list = tab === 'routine' ? routine : tasks;
   const doneCount = list.filter((entry) => entry.done).length;
+  const waitingCount = list.filter((entry) => entry.waiting).length;
   const percent = list.length ? Math.round((doneCount / list.length) * 100) : 0;
   const marker = tab === 'tasks' ? '⭐' : period === 'evening' ? '🌙' : '☀️';
 
@@ -135,7 +147,7 @@ function Tablet() {
           <b className="absolute top-1/2 -translate-y-1/2 translate-x-1/2 text-[34px] transition-[right] duration-500" style={{ right: `${percent}%` }}>{marker}</b>
         </div>
       )}
-      {list.length > 0 && doneCount === list.length && (
+      {list.length > 0 && doneCount === list.length && waitingCount === 0 && (
         <div className="mx-[clamp(16px,4vw,40px)] mt-1.5 rounded-[28px] bg-[linear-gradient(150deg,#1b2650,#3a2f6b)] p-5 text-center font-serif text-[clamp(26px,4.6vw,36px)] font-bold text-white">
           כל הכבוד, {kid.name}!
           <small className="mt-1 block font-sans text-lg font-bold opacity-85">{tab === 'routine' ? 'הכול מוכן' : 'סיימת את כל המשימות'}</small>
@@ -145,14 +157,14 @@ function Tablet() {
       <main className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,330px),1fr))] gap-3.5 px-[clamp(16px,4vw,40px)] pb-7 pt-2.5">
         {!list.length && <p className="px-1 py-5 text-2xl text-soft">{tab === 'routine' ? 'אין הכנות ברשימה' : 'אין משימות להיום 🎉'}</p>}
         {list.map((entry) => (
-          <button key={entry.id} aria-pressed={entry.done} onClick={() => entry.toggle().catch(failed)}
-            className={`flex min-h-[104px] items-center gap-4 rounded-[28px] border-4 px-[18px] py-3.5 text-start shadow-[0_3px_0_var(--color-line),0_10px_24px_rgba(60,40,10,.06)] transition-transform active:scale-[.97] ${entry.done ? 'border-ok bg-[#e8f6ef]' : 'border-transparent bg-card'}`}>
+          <button key={entry.id} aria-pressed={entry.done || !!entry.waiting} onClick={() => entry.toggle().catch(failed)}
+            className={`flex min-h-[104px] items-center gap-4 rounded-[28px] border-4 px-[18px] py-3.5 text-start shadow-[0_3px_0_var(--color-line),0_10px_24px_rgba(60,40,10,.06)] transition-transform active:scale-[.97] ${entry.done ? 'border-ok bg-[#e8f6ef]' : entry.waiting ? 'border-[#f0a93b] bg-[#fff4d6]' : 'border-transparent bg-card'}`}>
             <span className={`grid size-[76px] flex-none place-items-center rounded-3xl text-[46px] ${SOFT}`}>{entry.icon}</span>
             <span className={`min-w-0 flex-1 text-[clamp(24px,4vw,30px)] font-extrabold leading-tight ${entry.done ? 'text-[#2c6f58]' : ''}`}>
               {entry.text}
-              {entry.note && <small className="block text-[17px] font-bold text-soft">{entry.note}</small>}
+              {entry.note && <small className={`block text-[17px] font-bold ${entry.waiting ? 'text-[#9a6708]' : 'text-soft'}`}>{entry.note}</small>}
             </span>
-            <span className={`grid size-[60px] flex-none place-items-center rounded-full border-[5px] text-[34px] transition-colors ${entry.done ? 'border-ok bg-ok text-white' : 'border-faint text-transparent'}`}>✓</span>
+            <span className={`grid size-[60px] flex-none place-items-center rounded-full border-[5px] text-[34px] transition-colors ${entry.done ? 'border-ok bg-ok text-white' : entry.waiting ? 'border-[#f0a93b] bg-[#f0a93b]' : 'border-faint text-transparent'}`}>{entry.waiting ? '⏳' : '✓'}</span>
           </button>
         ))}
       </main>
